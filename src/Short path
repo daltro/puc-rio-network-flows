@@ -1,0 +1,33 @@
+private Map<Node, Boolean>> vis = new HashMap<Node, Boolean>();
+
+private Map<Node, Node> prev = new HashMap<Node, Node>();
+
+public List getDirections(Node start, Node finish){
+    List directions = new LinkedList();
+    Queue q = new LinkedList();
+    Node current = start;
+    q.add(current);
+    vis.put(current, true);
+    while(!q.isEmpty()){
+        current = q.remove();
+        if (current.equals(finish)){
+            break;
+        }else{
+            for(Node node : current.getOutNodes()){
+                if(!vis.contains(node)){
+                    q.add(node);
+                    vis.put(node, true);
+                    prev.put(node, current);
+                }
+            }
+        }
+    }
+    if (!current.equals(finish)){
+        System.out.println("can't reach destination");
+    }
+    for(Node node = finish; node != null; node = prev.get(node)) {
+        directions.add(node);
+    }
+    directions.reverse();
+    return directions;
+}
