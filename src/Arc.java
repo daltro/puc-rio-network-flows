@@ -1,31 +1,34 @@
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class Node {
-	private final int id;
-	private final ArrayList<Arc> links = new ArrayList<Arc>(2);
+
+public final class Arc {
+	private final Node head;
+	private final Node tail;
+
 	private final HashMap<String,Object> props = new HashMap<>(4);
-	
-	public Node(int id) {
-		this.id = id;
+
+	public Arc(Node head, Node tail) {
+		super();
+		this.head = head;
+		this.tail = tail;
 	}
-	
-	public int getId(){
-		return id;
-	}
-	
-	public Map<String,Object> getProps(){
+
+	public HashMap<String, Object> getProps() {
 		return props;
 	}
 	
-	public ArrayList<Arc> getLinks() {
-		return links;
+	public Node getHead() {
+		return head;
+	}
+	
+	public Node getTail() {
+		return tail;
 	}
 	
 	@Override
 	public String toString() {
-		String res = "Node(id="+id;
+		String res = "Arc("+head.getId()+"->"+tail.getId();
 		for (Map.Entry<String, Object> e : props.entrySet()){
 			res += ", "+e.getKey()+"=";
 			if (e.getValue() instanceof Node){
@@ -41,4 +44,5 @@ public final class Node {
 		res+=")";
 		return res;
 	}
+
 }
