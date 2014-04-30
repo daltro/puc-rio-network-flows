@@ -7,6 +7,8 @@ public class Main {
 
 	public static void main(String[] args) throws IOException {
 		
+		
+		//Teste
 		File netDirs = new File("netg");
 		for (File file : netDirs.listFiles()){
 			if (!file.getName().endsWith(".net"))
