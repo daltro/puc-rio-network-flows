@@ -42,6 +42,10 @@ public class Main {
 //			}
 //		});
 		
+
+		newNet.reCreateResidualNetwork();
+			
+/*		
 		LinkedList<Arc> cycle = BelmanFord.findNegativeCycles(newNet);
 
 		System.out.println("------------------");
@@ -54,6 +58,7 @@ public class Main {
 		
 		timer = System.currentTimeMillis() - timer;
 		System.out.println(newNet.getNodes().length+" visitados em "+timer+"ms.");
+*/		
 	}
 	
 }
