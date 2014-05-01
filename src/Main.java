@@ -1,6 +1,7 @@
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.LinkedList;
 
 
 public class Main {
@@ -30,17 +31,29 @@ public class Main {
 		timer = System.currentTimeMillis() - timer;
 		System.out.println("Ok em "+timer+"ms.");
 		
-		System.out.print(" * Rodando uma DFS completa... ");
+		System.out.print(" * Rodando uma Cycles completa... ");
 		timer = System.currentTimeMillis();
-		final long visitCount[] = new long[]{0};
-		DFS.doDFS(Arrays.asList(newNet.getNodes()), new NodeVisitor() {
-			@Override
-			public void visit(Node node) {
-				visitCount[0]+=1;
-			}
-		});
+//		final long visitCount[] = new long[]{0};
+//		DFS.doDFS(Arrays.asList(newNet.getNodes()), new NodeVisitor() {
+//			@Override
+//			public void visit(Node node) {
+//				visitCount[0]+=1;
+//				System.out.println("Visitei "+visitCount[0]+": "+node);
+//			}
+//		});
+		
+		LinkedList<Arc> cycle = BelmanFord.findNegativeCycles(newNet);
+
+		System.out.println("------------------");
+		for (Node n : newNet.getNodes()){
+			System.out.println(n);
+		}
+		System.out.println("------------------");
+
+		System.out.println(cycle);
+		
 		timer = System.currentTimeMillis() - timer;
-		System.out.println(visitCount[0]+"/"+newNet.getNodes().length+" visitados em "+timer+"ms.");
+		System.out.println(newNet.getNodes().length+" visitados em "+timer+"ms.");
 	}
 	
 }

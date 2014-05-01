@@ -14,7 +14,7 @@ public class DFS {
 
 		public DFSStack(Node node) {
 			this.node = node;
-			this.linkIterator = node.getLinks().iterator();
+			this.linkIterator = node.getArcs().iterator();
 		}
 	}
 
@@ -24,6 +24,7 @@ public class DFS {
 		Stack<DFSStack> stack = new Stack<>();
 		for (Node node : nodeList) {
 			if (!isVisited(node)) {
+				System.out.println("Vou visitar o "+node);
 				DSF_Visit(stack, node, visitor);
 			}
 		}
@@ -52,7 +53,7 @@ public class DFS {
 			}
 
 			Arc link = stkNode.linkIterator.next();
-			Node child = link.getTail();
+			Node child = link.getHead();
 			if (!isVisited(child)) { // Se o no ainda nao foi visitadoo
 				DFSStack stkChild = new DFSStack(child);
 				setVisited(child);

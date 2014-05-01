@@ -51,10 +51,10 @@ public class Network {
 					// a <v> <w> <low> <cap> <cost>
 					String split[] = line.split("\\s+");
 					Arc newArc = new Arc(
-							nodes[Integer.parseInt(split[1])-1],
-							nodes[Integer.parseInt(split[2])-1]);
+							nodes[Integer.parseInt(split[2])-1],
+							nodes[Integer.parseInt(split[1])-1]);
 					
-					newArc.getHead().getLinks().add(newArc);
+					newArc.getTail().getArcs().add(newArc);
 					
 					newArc.getProps().put("low", Integer.parseInt(split[3]));
 					newArc.getProps().put("cap", Integer.parseInt(split[4]));

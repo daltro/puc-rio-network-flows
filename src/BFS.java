@@ -19,7 +19,7 @@ public class BFS {
 			setVisited(node);
 			visitor.visit(node);
 
-			for (Arc link : node.getLinks()) {
+			for (Arc link : node.getArcs()) {
 				Node linkedNode = link.getTail();
 				if (!isVisited(linkedNode)) {
 					queue.addFirst(linkedNode);

@@ -4,7 +4,7 @@ import java.util.Map;
 
 public final class Node {
 	private final int id;
-	private final ArrayList<Arc> links = new ArrayList<Arc>(2);
+	private final ArrayList<Arc> arcs = new ArrayList<Arc>(2);
 	private final HashMap<String,Object> props = new HashMap<>(4);
 	
 	public Node(int id) {
@@ -19,8 +19,8 @@ public final class Node {
 		return props;
 	}
 	
-	public ArrayList<Arc> getLinks() {
-		return links;
+	public ArrayList<Arc> getArcs() {
+		return arcs;
 	}
 	
 	@Override
@@ -32,7 +32,7 @@ public final class Node {
 				res+="Node("+((Node)e.getValue()).getId()+")";
 			}
 			else if (e.getValue() instanceof Arc){
-				res+="Arc("+((Arc)e.getValue()).getHead().getId()+"->"+((Arc)e.getValue()).getTail().getId()+")";
+				res+="Arc("+((Arc)e.getValue()).getTail().getId()+"->"+((Arc)e.getValue()).getHead().getId()+")";
 			}
 			else{
 				res+=e.getValue();

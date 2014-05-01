@@ -28,14 +28,14 @@ public final class Arc {
 	
 	@Override
 	public String toString() {
-		String res = "Arc("+head.getId()+"->"+tail.getId();
+		String res = "Arc("+tail.getId()+"->"+head.getId();
 		for (Map.Entry<String, Object> e : props.entrySet()){
 			res += ", "+e.getKey()+"=";
 			if (e.getValue() instanceof Node){
 				res+="Node("+((Node)e.getValue()).getId()+")";
 			}
 			else if (e.getValue() instanceof Arc){
-				res+="Arc("+((Arc)e.getValue()).getHead().getId()+"->"+((Arc)e.getValue()).getTail().getId()+")";
+				res+="Arc("+((Arc)e.getValue()).getTail().getId()+"->"+((Arc)e.getValue()).getHead().getId()+")";
 			}
 			else{
 				res+=e.getValue();
