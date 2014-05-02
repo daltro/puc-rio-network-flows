@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class Network {
 	
@@ -38,13 +39,13 @@ public class Network {
 		}
 
 		
-		for(Node node : nodes){
+/*		for(Node node : nodes){
 			System.out.println(node);
 			for(ResidualArc resArc : node.getResidualArcs()){
 				System.out.println(resArc);
 			}
 		}
-		
+*/		
 	}
 	
 	public void loadFromFile(File netFile) throws IOException{
@@ -154,6 +155,12 @@ public class Network {
 		
 	}
 
+	public Path findPathResidual(Node nodeStart, Node nodeEnd) {
+		DFSNetworkRes dfs = new DFSNetworkRes();
+		Path resPath = dfs.findPath(nodeStart, nodeEnd);
+		return resPath;	
+	}
+	
 	public Node[] getNodes() {
 		return nodes;
 	}

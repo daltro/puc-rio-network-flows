@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 
@@ -44,6 +45,13 @@ public class Main {
 		
 
 		newNet.reCreateResidualNetwork();
+		Path resPath = newNet.findPathResidual(newNet.getNodes()[0], newNet.getNodes()[5]);
+		if(resPath != null){
+			System.out.println("Path: " + resPath);
+			resPath.invertPath();
+			System.out.println("InvPath: " + resPath);
+			System.out.println("Capacidade minima: " + resPath.getBottleneck());
+		}
 			
 /*		
 		LinkedList<Arc> cycle = BelmanFord.findNegativeCycles(newNet);
