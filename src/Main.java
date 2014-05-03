@@ -29,6 +29,8 @@ public class Main {
 		
 		newNet.loadFromFile(file);
 		
+		newNet.createResidualNetwork();
+		
 		timer = System.currentTimeMillis() - timer;
 		System.out.println("Ok em "+timer+"ms.");
 		
@@ -44,14 +46,17 @@ public class Main {
 //		});
 		
 
-		newNet.reCreateResidualNetwork();
+/*		newNet.reCreateResidualNetwork();
 		Path resPath = newNet.findPathResidual(newNet.getNodes()[0], newNet.getNodes()[5]);
-		if(resPath != null){
-			System.out.println("Path: " + resPath);
-			resPath.invertPath();
-			System.out.println("InvPath: " + resPath);
-			System.out.println("Capacidade minima: " + resPath.getBottleneck());
-		}
+
+		System.out.println("Path: " + resPath);
+		resPath.invertPath();
+		System.out.println("InvPath: " + resPath);
+		System.out.println("Capacidade minima: " + resPath.getBottleneck());
+*/
+		
+		int maxFlow = newNet.maxFlow(newNet.getNodes()[0], newNet.getNodes()[5]);
+		System.out.println("Fluxo Máximo: " + maxFlow);
 			
 /*		
 		LinkedList<Arc> cycle = BelmanFord.findNegativeCycles(newNet);

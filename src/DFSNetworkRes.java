@@ -60,10 +60,9 @@ public class DFSNetworkRes {
 				setVisited(child);
 				setParent(child,node);
 				stack.push(stkChild);
-			} 
-
+			} 		
 		}
-		return null;
+		return resPath;
 	}
 	
 	private static final boolean isVisited(Node node){
@@ -72,6 +71,11 @@ public class DFSNetworkRes {
 
 	private static final void setVisited(Node node){
 		node.getProps().put(DFS_V, VALUE);
+	}
+
+	private static final void setUnvisited(Node node){
+		node.getProps().remove(DFS_V);
+		node.getProps().remove(DFS_P);
 	}
 	
 	private static final Node getParent(Node node){

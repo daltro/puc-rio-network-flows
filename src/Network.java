@@ -39,13 +39,21 @@ public class Network {
 		}
 
 		
-/*		for(Node node : nodes){
+		System.out.println("Grafo--------------");
+		for(Node node : nodes){
 			System.out.println(node);
-			for(ResidualArc resArc : node.getResidualArcs()){
-				System.out.println(resArc);
-			}
+			for(Arc Arc : node.getArcs())
+				System.out.println(Arc);
 		}
-*/		
+
+		System.out.println("Rede Residual--------------");
+		for(Node node : nodes){
+			System.out.println(node);
+			for(ResidualArc resArc : node.getResidualArcs())
+				System.out.println(resArc);
+		}
+
+		
 	}
 	
 	public void loadFromFile(File netFile) throws IOException{
@@ -111,7 +119,7 @@ public class Network {
 				
 			}
 			
-			createResidualNetwork();
+			//createResidualNetwork();
 						
 		}
 		finally{
@@ -145,14 +153,30 @@ public class Network {
 					//Faz a ligação dos arcos do grafo com os arcos da rede residual
 					arc.getProps().put("res.arc", newResArc);
 					arc.getProps().put("res.arcInv", newResArcInv);
+					
+					//Faz a ligação dos arcos da rede residual com os arcos do grafo
+					newResArc.getProps().put("arc", arc);
+					newResArcInv.getProps().put("arcInv", arc);
 
-				}else{ //Se tem arco inverso e ele já foi visitado, só cria as ligações entre os arcos do grafo e da rede residual 
+				}else{ //Se tem arco inverso e ele já foi visitado
+					
+					//Cria as ligações entre os arcos do grafo e da rede residual 
 					arc.getProps().put("res.arc", arcInv.getProps().get("res.arcInv"));
 					arc.getProps().put("res.arcInv", arcInv.getProps().get("res.arc"));
+					
+					//Cria as ligações dos arcos da rede residual com os arcos do grafo
+					ResidualArc auxResArc;
+					auxResArc = (ResidualArc)arcInv.getProps().get("res.arcInv");
+					auxResArc.getProps().put("arc", arc);
+					auxResArc = (ResidualArc)arcInv.getProps().get("res.arc");
+					auxResArc.getProps().put("arcInv", arc);
+					
 				}
 			}			
 		}
 		
+		//Faz o reCreate para criar as capacidades dos arcos na rede residual
+		reCreateResidualNetwork();
 	}
 
 	public Path findPathResidual(Node nodeStart, Node nodeEnd) {
@@ -161,8 +185,70 @@ public class Network {
 		return resPath;	
 	}
 	
+	public void clearNetworkDFS(){
+		//Limpa as marcações da DFS no grafo
+		for(Node node : nodes){
+			node.getProps().remove("dfs.P");
+			node.getProps().remove("dfs.V");
+		}
+	}
+	
+	public void updateFlow(Path path, int flow){
+		Arc auxArc;
+		int auxFlow;
+		for(ResidualArc resArc : path.getPath()){
+			auxFlow = flow;
+			
+			//Se existe um arco com sentido inverso no grafo
+			if(resArc.getProps().containsKey("arcInv")){
+				auxArc = (Arc)resArc.getProps().get("arcInv");
+				if((Integer)auxArc.getProps().get("flow") >= flow){
+					auxArc.getProps().put("flow", (Integer)auxArc.getProps().get("flow") - auxFlow);
+					auxFlow = 0;
+				}else{
+					auxFlow -= (Integer)auxArc.getProps().get("flow");
+					auxArc.getProps().put("flow", 0);				
+				}
+			}
+
+			//Se existe um arco com o mesmo sentido no grafo
+			if(resArc.getProps().containsKey("arc") && auxFlow > 0){
+				auxArc = (Arc)resArc.getProps().get("arc");
+				auxArc.getProps().put("flow", (Integer)auxArc.getProps().get("flow") + auxFlow);
+			}
+
+		}
+	}
+	
+	public int maxFlow(Node s, Node t){
+		int valueMaxFlow = 0;
+		
+		Path resPath = findPathResidual(s,t); //Encontra um caminho aumentante	
+		clearNetworkDFS(); //Limpa as marcações da DFS
+		
+		while(resPath.size() > 0){
+			updateFlow(resPath, resPath.getBottleneck()); //Aumenta o fluxo no caminho aumentante
+			reCreateResidualNetwork(); //Atualiza a rede residual com o novo fluxo
+			resPath = findPathResidual(s,t); //Encontra um caminho aumentante
+			clearNetworkDFS(); //Limpa as marcações da DFS
+		}
+
+		for(Arc arc : s.getArcs())
+			valueMaxFlow += (Integer)arc.getProps().get("flow");
+		
+		return valueMaxFlow;
+	}
+	
 	public Node[] getNodes() {
 		return nodes;
+	}
+	
+	public void transformDistributionToMaxFlow(){
+		//Transforma o grafo do problema de distribuição com vários nós de suprimento e demanda
+		//para um grafo de um problema de fluxo máximo com uma fonte e um sorvedouro
+		
+		
+		
 	}
 	
 }
