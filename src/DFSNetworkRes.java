@@ -72,11 +72,6 @@ public class DFSNetworkRes {
 	private static final void setVisited(Node node){
 		node.getProps().put(DFS_V, VALUE);
 	}
-
-	private static final void setUnvisited(Node node){
-		node.getProps().remove(DFS_V);
-		node.getProps().remove(DFS_P);
-	}
 	
 	private static final Node getParent(Node node){
 		return (Node)node.getProps().get(DFS_P);

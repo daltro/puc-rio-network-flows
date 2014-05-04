@@ -15,6 +15,14 @@ public final class Path {
 		path.add(resArc);
 	}
 	
+	public boolean contains(ResidualArc resArc){
+		return path.contains(resArc);
+	}
+	
+	public void clear(){
+		path.clear();
+	}
+	
 	public int size(){
 		return path.size();
 	}

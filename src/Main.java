@@ -28,9 +28,7 @@ public class Main {
 		long timer = System.currentTimeMillis();
 		
 		newNet.loadFromFile(file);
-		
-		newNet.createResidualNetwork();
-		
+				
 		timer = System.currentTimeMillis() - timer;
 		System.out.println("Ok em "+timer+"ms.");
 		
@@ -54,24 +52,55 @@ public class Main {
 		System.out.println("InvPath: " + resPath);
 		System.out.println("Capacidade minima: " + resPath.getBottleneck());
 */
+
+		newNet.transformDistributionToMaxFlow();
+		newNet.createResidualNetwork();
 		
-		int maxFlow = newNet.maxFlow(newNet.getNodes()[0], newNet.getNodes()[5]);
-		System.out.println("Fluxo Máximo: " + maxFlow);
-			
-/*		
-		LinkedList<Arc> cycle = BelmanFord.findNegativeCycles(newNet);
-
-		System.out.println("------------------");
-		for (Node n : newNet.getNodes()){
-			System.out.println(n);
+/*		System.out.println("Grafo--------------");
+		for(Node node : newNet.getNodes()){
+			System.out.println(node);
+			for(Arc Arc : node.getArcs())
+				System.out.println(Arc);
 		}
-		System.out.println("------------------");
 
-		System.out.println(cycle);
+		System.out.println("Rede Residual--------------");
+		for(Node node : newNet.getNodes()){
+			System.out.println(node);
+			for(ResidualArc resArc : node.getResidualArcs())
+				System.out.println(resArc);
+		}
+*/
+		
+		ResponseCycleCanceling response = newNet.cycleCanceling();
+		if(response.isFeasibleSolution())
+			System.out.println("Custo do fluxo: " + response.getCostFlow());
+		else
+			System.out.println("Problema sem solução viável.");
+
+
+/*		
+		System.out.println("--------Verificação Final----------");
+
+		System.out.println("Grafo--------------");
+		for(Node node : newNet.getNodes()){
+			System.out.println(node);
+			for(Arc Arc : node.getArcs())
+				System.out.println(Arc);
+		}
+
+		System.out.println("Rede Residual--------------");
+		for(Node node : newNet.getNodes()){
+			System.out.println(node);
+			for(ResidualArc resArc : node.getResidualArcs())
+				System.out.println(resArc);
+		}
+		
+		System.out.println("------------------");
+*/
 		
 		timer = System.currentTimeMillis() - timer;
-		System.out.println(newNet.getNodes().length+" visitados em "+timer+"ms.");
-*/		
+		System.out.println(newNet.getNodes().size()+" visitados em "+timer+"ms.");
+
 	}
 	
 }
