@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 
 public final class Path {
+	
 	private final ArrayList<ResidualArc> path;
 
 	public Path() {

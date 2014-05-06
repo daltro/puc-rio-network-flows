@@ -23,8 +23,8 @@ public class BelmanFord {
 		}
 		nodes.get(start).getProps().put("bf.dist", 0);
 		
-		//Executa o algoritmo BelmanFord n vezes
-		for (int i=0; i<nodes.size(); i++){
+		//Executa o algoritmo BelmanFord n-1 vezes
+		for (int i=0; i<nodes.size()-1; i++){
 			
 			for (int j=0; j<nodes.size(); j++){
 								

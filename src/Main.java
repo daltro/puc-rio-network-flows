@@ -53,9 +53,6 @@ public class Main {
 		System.out.println("Capacidade minima: " + resPath.getBottleneck());
 */
 
-		newNet.transformDistributionToMaxFlow();
-		newNet.createResidualNetwork();
-		
 /*		System.out.println("Grafo--------------");
 		for(Node node : newNet.getNodes()){
 			System.out.println(node);
@@ -76,7 +73,6 @@ public class Main {
 			System.out.println("Custo do fluxo: " + response.getCostFlow());
 		else
 			System.out.println("Problema sem solução viável.");
-
 
 /*		
 		System.out.println("--------Verificação Final----------");

@@ -24,55 +24,7 @@ public class Network {
 				auxResArc.getProps().put("cap", (Integer)arc.getProps().get("flow") );					
 			}
 			
-		}
-
-/*		
-		System.out.println("Grafo--------------");
-		for(Node node : nodes){
-			System.out.println(node);
-			for(Arc Arc : node.getArcs())
-				System.out.println(Arc);
-		}
-
-		System.out.println("Rede Residual--------------");
-		for(Node node : nodes){
-			System.out.println(node);
-			for(ResidualArc resArc : node.getResidualArcs())
-				System.out.println(resArc);
-		}
-*/
-
-/*
-		Arc arcInv;
-		ResidualArc auxResArc;
-		
-		for(Node node : nodes){
-			//System.out.println(node);
-			for(Arc arc : node.getArcs()){
-				//System.out.println(arc);
-
-				//Verifica se existe um arco de head para tail no grafo
-				arcInv = arc.getHead().hasArc(arc.getTail());
-				
-				if(arcInv == null){
-					auxResArc = (ResidualArc)arc.getProps().get("res.arc");
-					auxResArc.getProps().put("cap", (Integer)arc.getProps().get("cap") - (Integer)arc.getProps().get("flow") );
-					
-					auxResArc = (ResidualArc)arc.getProps().get("res.arcInv");
-					auxResArc.getProps().put("cap", (Integer)arc.getProps().get("flow") );					
-				}else{
-					auxResArc = (ResidualArc)arc.getProps().get("res.arc");
-					auxResArc.getProps().put("cap", (Integer)arc.getProps().get("cap") - (Integer)arc.getProps().get("flow") + (Integer)arcInv.getProps().get("flow"));
-					
-					auxResArc = (ResidualArc)arc.getProps().get("res.arcInv");
-					auxResArc.getProps().put("cap", (Integer)arcInv.getProps().get("cap") - (Integer)arcInv.getProps().get("flow") + (Integer)arc.getProps().get("flow") );
-				}
-			}
-			
-		}
-		
- */
-		
+		}		
 	}
 	
 	public void loadFromFile(File netFile) throws IOException{
@@ -108,28 +60,12 @@ public class Network {
 				else if (line.startsWith("n ")){
 					// Definição de um nó
 					// n <id> <flow>
-					String split[] = line.split("\\s+");
-					Node newNode = new Node(Integer.parseInt(split[1]));
-					//nodes[newNode.getId()-1] = newNode;
-					newNode.getProps().put("flow", Integer.parseInt(split[2]));
-					nodes.set(newNode.getId()-1, newNode);
+					String split[] = line.split("\\s+");				
+					nodes.get(Integer.parseInt(split[1])-1).getProps().put("flow", Integer.parseInt(split[2]));
 				}
 				
 				else if (line.startsWith("a ")){
-					
-					if (!nodesEnded){
-						nodesEnded = true;
-						
-/*						for (int i=0; i<nodes.size(); i+=1){
-							if (nodes[i]==null){
-								Node newNode = new Node(i+1);
-								nodes[i] = newNode;
-								newNode.getProps().put("flow", 0);
-							}
-						}
-*/						
-					}
-					
+									
 					// Definição de uma aresta
 					// a <v> <w> <low> <cap> <cost>
 					String split[] = line.split("\\s+");
@@ -184,68 +120,38 @@ public class Network {
 				newResArcInv.getProps().put("arcInv", arc);
 			}			
 		}
-
 		
-/*		
-		//Cria os arcos da rede residual com custos mas sem capacidades
-		for(Node node : nodes){
-			for(Arc arc : node.getArcs()){
-				//Verifica se existe um arco de head para tail no grafo
-				arcInv = arc.getHead().hasArc(arc.getTail());
-
-				//Se tem arco inverso mas não foi visitado ainda ou não tem arco inverso
-				//Então cria os arcos do grafo residual e as ligações entre os arcos do grafo e da rede residual
-				if((arcInv != null && !arcInv.getProps().containsKey("res.arc")) || (arcInv == null)){
-					//Adiciona o arco na rede residual no mesmo sentido
-					ResidualArc newResArc = new ResidualArc(arc.getHead(), arc.getTail());
-					newResArc.getTail().getResidualArcs().add(newResArc);
-					newResArc.getProps().put("cost", (Integer)arc.getProps().get("cost"));					
-					
-					//Adiciona o arco na rede residual no sentido inverso
-					ResidualArc newResArcInv = new ResidualArc(arc.getTail(), arc.getHead());
-					newResArcInv.getTail().getResidualArcs().add(newResArcInv);
-					newResArcInv.getProps().put("cost", -(Integer)arc.getProps().get("cost"));
-					
-					//Faz a ligação dos arcos do grafo com os arcos da rede residual
-					arc.getProps().put("res.arc", newResArc);
-					arc.getProps().put("res.arcInv", newResArcInv);
-					
-					//Faz a ligação dos arcos da rede residual com os arcos do grafo
-					newResArc.getProps().put("arc", arc);
-					newResArcInv.getProps().put("arcInv", arc);
-
-				}else{ //Se tem arco inverso e ele já foi visitado
-					
-					//Cria as ligações entre os arcos do grafo e da rede residual 
-					arc.getProps().put("res.arc", arcInv.getProps().get("res.arcInv"));
-					arc.getProps().put("res.arcInv", arcInv.getProps().get("res.arc"));
-					
-					//Cria as ligações dos arcos da rede residual com os arcos do grafo
-					ResidualArc auxResArc;
-					auxResArc = (ResidualArc)arcInv.getProps().get("res.arcInv");
-					auxResArc.getProps().put("arc", arc);
-					auxResArc = (ResidualArc)arcInv.getProps().get("res.arc");
-					auxResArc.getProps().put("arcInv", arc);
-					
-				}
-			}			
-		}
-*/		
 		//Faz o reCreate para criar as capacidades dos arcos na rede residual
 		reCreateResidualNetwork();
 	}
 
-	public Path findPathResidual(Node nodeStart, Node nodeEnd) {
+	public Path findPathResidual(Node nodeStart, Node nodeEnd, int cut) {
+		clearNetworkDFS();
 		DFSNetworkRes dfs = new DFSNetworkRes();
-		Path resPath = dfs.findPath(nodeStart, nodeEnd);
+		Path resPath = dfs.findPath(nodeStart, nodeEnd, cut);
 		return resPath;	
 	}
-	
+
+	public Path findPathResidualBFS(Node nodeStart, Node nodeEnd, int cut) {
+		clearNetworkBFS();
+		BFSNetworkRes bfs = new BFSNetworkRes();
+		Path resPath = bfs.findPath(nodeStart, nodeEnd, cut);
+		return resPath;	
+	}
+
 	public void clearNetworkDFS(){
 		//Limpa as marcações da DFS no grafo
 		for(Node node : nodes){
 			node.getProps().remove("dfs.P");
 			node.getProps().remove("dfs.V");
+		}
+	}
+	
+	public void clearNetworkBFS(){
+		//Limpa as marcações da DFS no grafo
+		for(Node node : nodes){
+			node.getProps().remove("bfs.P");
+			node.getProps().remove("bfs.V");
 		}
 	}
 	
@@ -275,55 +181,47 @@ public class Network {
 
 		}
 		
-/*		Arc auxArc;
-		int auxFlow;
-		
-		for(ResidualArc resArc : path.getPath()){
-			
-			if((Integer)resArc.getProps().get("cost") > 0){
-				auxArc = (Arc)resArc.getProps().get("arc");
-				auxArc.getProps().put("flow", (Integer)resArc.getProps().get("flow") + flow);
-			}else if((Integer)resArc.getProps().get("cost") < 0){
-				auxArc = (Arc)resArc.getProps().get("arcInv");
-				auxArc.getProps().put("flow", (Integer)resArc.getProps().get("flow") - flow);
-			}else{
-				auxFlow = flow;
-				//Se existe um arco com sentido inverso no grafo
-				if(resArc.getProps().containsKey("arcInv")){
-					auxArc = (Arc)resArc.getProps().get("arcInv");
-					if((Integer)auxArc.getProps().get("flow") >= flow){
-						auxArc.getProps().put("flow", (Integer)auxArc.getProps().get("flow") - auxFlow);
-						auxFlow = 0;
-					}else{
-						auxFlow -= (Integer)auxArc.getProps().get("flow");
-						auxArc.getProps().put("flow", 0);				
-					}
-				}
-
-				//Se existe um arco com o mesmo sentido no grafo
-				if(resArc.getProps().containsKey("arc") && auxFlow > 0){
-					auxArc = (Arc)resArc.getProps().get("arc");
-					auxArc.getProps().put("flow", (Integer)auxArc.getProps().get("flow") + auxFlow);
-				}
-				
-			}
-
-		}
-*/
-		
 	}
 	
 	public int fordFulkerson(Node s, Node t){
 		int valueMaxFlow = 0;
 		
-		Path resPath = findPathResidual(s,t); //Encontra um caminho aumentante	
+		Path resPath = findPathResidual(s,t, 1); //Encontra um caminho aumentante	
 		clearNetworkDFS(); //Limpa as marcações da DFS
 		
 		while(resPath.size() > 0){
 			updateFlow(resPath, resPath.getBottleneck()); //Aumenta o fluxo no caminho aumentante
 			reCreateResidualNetwork(); //Atualiza a rede residual com o novo fluxo
-			resPath = findPathResidual(s,t); //Encontra um caminho aumentante
+			resPath = findPathResidual(s,t, 1); //Encontra um caminho aumentante
 			clearNetworkDFS(); //Limpa as marcações da DFS
+		}
+
+		for(Arc arc : s.getArcs())
+			valueMaxFlow += (Integer)arc.getProps().get("flow");
+		
+		return valueMaxFlow;
+	}
+	
+	public int edmondsKarp(Node s, Node t){
+		int valueMaxFlow = 0;
+		
+		Path resPath = findPathResidualBFS(s,t,1); //Encontra um caminho aumentante	
+		
+		int count=0;
+		long timer;
+		long time = 0;
+		while(resPath.size() > 0){
+			updateFlow(resPath, resPath.getBottleneck()); //Aumenta o fluxo no caminho aumentante
+			reCreateResidualNetwork(); //Atualiza a rede residual com o novo fluxo
+			timer = System.currentTimeMillis();
+			resPath = findPathResidualBFS(s,t,1); //Encontra um caminho aumentante
+			time += System.currentTimeMillis()-timer;
+			count += 1;
+			if (count >= 1000){
+				System.out.println("Tempo médio de findPathResidual: "+(time/1000)+"ms.");
+				count = 0;
+				time = 0;
+			}
 		}
 
 		for(Arc arc : s.getArcs())
@@ -393,10 +291,15 @@ public class Network {
 	public ResponseCycleCanceling cycleCanceling(){
 		ResponseCycleCanceling responseCycleCanceling; // = new ResponseCycleCanceling();
 		
+		// Inicializa rede
+		transformDistributionToMaxFlow();
+		createResidualNetwork();
+		long timer = System.currentTimeMillis();
 		//Resolve o problema Max Flow com o algoritmo Ford-Fulkerson do nó S até o nó T
-		int maxFlow = fordFulkerson(nodes.get(nodes.size()-2), nodes.get(nodes.size()-1));
-		System.out.println("Fluxo Máximo: " + maxFlow);
-			
+		int maxFlow = edmondsKarp(nodes.get(nodes.size()-2), nodes.get(nodes.size()-1));
+		//int maxFlow = fordFulkerson(nodes.get(nodes.size()-2), nodes.get(nodes.size()-1));
+		System.out.println("Fluxo Máximo: " + maxFlow+ " calculado em "+(System.currentTimeMillis()-timer)+"ms.");
+
 		//Verifica se o problema tem solução viável
 		if(!flowIsFeasibleToDistribution()){
 			responseCycleCanceling = new ResponseCycleCanceling(false);
@@ -404,7 +307,7 @@ public class Network {
 		}
 		
 		Path cycle = BelmanFord.findNegativeCycles(nodes, nodes.size()-2);
-		System.out.println("Custo do Fluxo: " + calcCostFlow());
+		System.out.println("Custo do Fluxo inicial: " + calcCostFlow());
 		
 		while(cycle.size() > 0){
 			//System.out.println("*****Ciclo: " + cycle);
@@ -428,6 +331,24 @@ public class Network {
 				costFlow += (Integer)arc.getProps().get("flow") * (Integer)arc.getProps().get("cost");
 		
 		return costFlow;
+	}
+	
+	public ResponseCycleCanceling sucessiveShortestPath(){
+		ResponseCycleCanceling response;
+		
+		for(Node node : nodes){
+			node.getProps().put("ssp.p", 0);
+			node.getProps().put("ssp.e", node.getProps().get("flow"));
+		}
+		
+		for(Node node : nodes){
+			for(Arc arc : node.getArcs()){
+				arc.getProps().put("flow", 0);
+			}
+		}
+		
+		response = new ResponseCycleCanceling(calcCostFlow());
+		return response;
 	}
 	
 }

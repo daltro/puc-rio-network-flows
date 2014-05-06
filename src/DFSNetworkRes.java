@@ -21,11 +21,11 @@ public class DFSNetworkRes {
 		}
 	}
 
-	public Path findPath(Node nodeStart, Node nodeEnd) {
+	public Path findPath(Node nodeStart, Node nodeEnd, int cut) {
 		Path resPath = new Path();
 		Stack<DFSStack> stack = new Stack<>();
 		ResidualArc actualArc = nodeStart.getResidualArcs().iterator().next();
-				
+
 		DFSStack stackStep = new DFSStack(nodeStart, actualArc);
 		setVisited(nodeStart);
 		stack.push(stackStep);
@@ -40,7 +40,7 @@ public class DFSNetworkRes {
 			}
 
 			ResidualArc link = stkNode.linkIterator.next();
-			if((Integer)link.getProps().get("cap") == 0)
+			if((Integer)link.getProps().get("cap") < cut)
 				continue;
 			
 			Node child = link.getHead();
