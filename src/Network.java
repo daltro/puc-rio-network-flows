@@ -79,6 +79,11 @@ public class Network {
 					newArc.getProps().put("cap", Integer.parseInt(split[4]));
 					newArc.getProps().put("cost", Integer.parseInt(split[5]));
 					
+					if (Integer.parseInt(split[3]) > 0){
+						System.err.println("Grafo tem lower bound!!");
+						System.exit(1);
+					}
+					
 					if(split.length == 7)
 						newArc.getProps().put("flow", Integer.parseInt(split[6]));
 					else
