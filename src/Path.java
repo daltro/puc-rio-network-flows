@@ -32,10 +32,10 @@ public final class Path {
 		int minArc = -1;
 		
 		if(path.size() != 0){	
-			minArc = (Integer)path.get(0).getProps().get("cap");
+			minArc = (Integer)path.get(0).get("cap");
 			
 			for(int i = 1; i < path.size(); i++)
-				minArc = Math.min(minArc, (Integer)path.get(i).getProps().get("cap"));
+				minArc = Math.min(minArc, (Integer)path.get(i).get("cap"));
 		}
 		return minArc;
 	}

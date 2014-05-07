@@ -18,6 +18,14 @@ public final class Arc {
 		return props;
 	}
 	
+	public Object get(String key){
+		return props.get(key);
+	}
+	
+	public void set(String key, Object value){
+		props.put(key, value);
+	}
+	
 	public Node getHead() {
 		return head;
 	}

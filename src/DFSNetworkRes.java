@@ -38,7 +38,7 @@ public class DFSNetworkRes {
 			}
 
 			Arc link = stkNode.linkIterator.next();
-			if((Integer)link.getProps().get("cap") < cut)
+			if((Integer)link.get("cap") < cut)
 				continue;
 			
 			Node child = link.getHead();
@@ -68,15 +68,15 @@ public class DFSNetworkRes {
 	}
 
 	private static final void setVisited(Node node){
-		node.getProps().put(DFS_V, VALUE);
+		node.set(DFS_V, VALUE);
 	}
 	
 	private static final Node getParent(Node node){
-		return (Node)node.getProps().get(DFS_P);
+		return (Node)node.get(DFS_P);
 	}
 	
 	private static final void setParent(Node node, Node parent){
-		node.getProps().put(DFS_P, parent);
+		node.set(DFS_P, parent);
 	}
 
 }

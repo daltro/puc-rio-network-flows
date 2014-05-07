@@ -20,6 +20,14 @@ public final class Node {
 		return props;
 	}
 	
+	public Object get(String key){
+		return props.get(key);
+	}
+	
+	public void set(String key, Object value){
+		props.put(key, value);
+	}
+	
 	public ArrayList<Arc> getArcs() {
 		return arcs;
 	}

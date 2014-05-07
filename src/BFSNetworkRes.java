@@ -19,7 +19,7 @@ public class BFSNetworkRes {
 			
 			for (Arc link : node.getResidualArcs()) {
 				
-				if ((Integer)link.getProps().get("cap") < cut)
+				if ((Integer)link.get("cap") < cut)
 					continue;
 				
 				Node linkedNode = link.getHead();
@@ -32,8 +32,8 @@ public class BFSNetworkRes {
 						Path res = new Path();
 						Node cursor = linkedNode;
 						while (getParent(cursor)!=null){
-							res.add((Arc)cursor.getProps().get(BFS_PL));
-							cursor = (Node)cursor.getProps().get(BFS_P);
+							res.add((Arc)cursor.get(BFS_PL));
+							cursor = (Node)cursor.get(BFS_P);
 						}
 						return res;
 					}
@@ -50,24 +50,24 @@ public class BFSNetworkRes {
 	}
 
 	private static final void setVisited(Node node) {
-		node.getProps().put(BFS_V, VALUE);
+		node.set(BFS_V, VALUE);
 	}
 
 	private static final Node getParent(Node node){
-		return (Node)node.getProps().get(BFS_P);
+		return (Node)node.get(BFS_P);
 	}
 	
 	private static final void setParent(Node node, Node parent){
-		node.getProps().put(BFS_P, parent);
+		node.set(BFS_P, parent);
 	}
 	
 	@SuppressWarnings("unused")
 	private static final Arc getParentLink(Node node){
-		return (Arc)node.getProps().get(BFS_PL);
+		return (Arc)node.get(BFS_PL);
 	}
 	
 	private static final void setParentLink(Node node, Arc parent){
-		node.getProps().put(BFS_PL, parent);
+		node.set(BFS_PL, parent);
 	}
 
 }

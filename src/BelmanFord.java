@@ -15,12 +15,12 @@ public class BelmanFord {
 	public static void doBellmanFord(ArrayList<Node> nodes, int start){
 		
 		for (Node n : nodes){	
-			n.getProps().put("bf.dist", LARGE);
-			n.getProps().put("bf.parentNode", null);
-			n.getProps().put("bf.parentResArc", null);
+			n.set("bf.dist", LARGE);
+			n.set("bf.parentNode", null);
+			n.set("bf.parentResArc", null);
 			
 		}
-		nodes.get(start).getProps().put("bf.dist", 0);
+		nodes.get(start).set("bf.dist", 0);
 		
 		//Executa o algoritmo BelmanFord n-1 vezes
 		for (int i=0; i<nodes.size()-1; i++){
@@ -29,20 +29,20 @@ public class BelmanFord {
 								
 				for (Arc resArc : nodes.get(j).getResidualArcs()){				
 					//Despresa arestas com capacidade igual a zero
-					if((Integer)resArc.getProps().get("cap") == 0)
+					if((Integer)resArc.get("cap") == 0)
 						continue;
 					
-					int distHead = (Integer)resArc.getHead().getProps().get("bf.dist");
-					int distTail = (Integer)resArc.getTail().getProps().get("bf.dist");
+					int distHead = (Integer)resArc.getHead().get("bf.dist");
+					int distTail = (Integer)resArc.getTail().get("bf.dist");
 					
-					int cost = (Integer)resArc.getProps().get("cost");
+					int cost = (Integer)resArc.get("cost");
 					//if(distTail != LARGE)
 						distTail += cost;
 					
 					if (distTail<distHead){
-						resArc.getHead().getProps().put("bf.dist", distTail);
-						resArc.getHead().getProps().put("bf.parentNode", resArc.getTail());
-						resArc.getHead().getProps().put("bf.parentResArc", resArc);
+						resArc.getHead().set("bf.dist", distTail);
+						resArc.getHead().set("bf.parentNode", resArc.getTail());
+						resArc.getHead().set("bf.parentResArc", resArc);
 					}
 				}
 			}
@@ -76,30 +76,30 @@ public class BelmanFord {
 			
 			for (Arc resArc : node.getResidualArcs()){
 				//Despresa arestas com capacidade igual a zero
-				if((Integer)resArc.getProps().get("cap") == 0)
+				if((Integer)resArc.get("cap") == 0)
 					continue;
 				
-				int distHead = (Integer)resArc.getHead().getProps().get("bf.dist");
-				int distTail = (Integer)resArc.getTail().getProps().get("bf.dist");
+				int distHead = (Integer)resArc.getHead().get("bf.dist");
+				int distTail = (Integer)resArc.getTail().get("bf.dist");
 				
-				int cost = (Integer)resArc.getProps().get("cost");
+				int cost = (Integer)resArc.get("cost");
 				//if(distTail != LARGE)
 					distTail += cost;
 				
 				if (distTail<distHead){					
-					Arc resArcIt = (Arc)node.getProps().get("bf.parentResArc");
+					Arc resArcIt = (Arc)node.get("bf.parentResArc");
 					
 					do {
 						theCycle.add(resArcIt);
-						resArcIt = (Arc)resArcIt.getTail().getProps().get("bf.parentResArc");
+						resArcIt = (Arc)resArcIt.getTail().get("bf.parentResArc");
 					} while (!theCycle.contains(resArcIt));
 					
 					theCycle.clear();
 					
 					do {
 						theCycle.add(resArcIt);
-						resArcIt = (Arc)resArcIt.getTail().getProps().get("bf.parentResArc");
-						if((Integer)resArcIt.getProps().get("cap") == 0){
+						resArcIt = (Arc)resArcIt.getTail().get("bf.parentResArc");
+						if((Integer)resArcIt.get("cap") == 0){
 							continuar = true;
 							break;
 						}

@@ -20,11 +20,11 @@ public class Network {
 		for(Node node : nodes){
 
 			for(Arc arc : node.getArcs()){
-				auxResArc = (Arc)arc.getProps().get("res.arc");
-				auxResArc.getProps().put("cap", (Integer)arc.getProps().get("cap") - (Integer)arc.getProps().get("flow") );
+				auxResArc = (Arc)arc.get("res.arc");
+				auxResArc.set("cap", (Integer)arc.get("cap") - (Integer)arc.get("flow") );
 				
-				auxResArc = (Arc)arc.getProps().get("res.arcInv");
-				auxResArc.getProps().put("cap", arc.getProps().get("flow") );					
+				auxResArc = (Arc)arc.get("res.arcInv");
+				auxResArc.set("cap", arc.get("flow") );					
 			}
 			
 		}		
@@ -53,7 +53,7 @@ public class Network {
 					//Cria todos os nós vazios no ArrayList
 					for(int i = 0; i < qtdNodes; i++){
 						Node newNode = new Node(i+1);
-						newNode.getProps().put("flow", 0);
+						newNode.set("flow", 0);
 						nodes.add(newNode);
 					}
 
@@ -63,7 +63,7 @@ public class Network {
 					// Definição de um nó
 					// n <id> <flow>
 					String split[] = line.split("\\s+");				
-					nodes.get(Integer.parseInt(split[1])-1).getProps().put("flow", Integer.parseInt(split[2]));
+					nodes.get(Integer.parseInt(split[1])-1).set("flow", Integer.parseInt(split[2]));
 				}
 				
 				else if (line.startsWith("a ")){
@@ -77,9 +77,9 @@ public class Network {
 					
 					newArc.getTail().getArcs().add(newArc);
 					
-					newArc.getProps().put("low", Integer.parseInt(split[3]));
-					newArc.getProps().put("cap", Integer.parseInt(split[4]));
-					newArc.getProps().put("cost", Integer.parseInt(split[5]));
+					newArc.set("low", Integer.parseInt(split[3]));
+					newArc.set("cap", Integer.parseInt(split[4]));
+					newArc.set("cost", Integer.parseInt(split[5]));
 					
 					if (Integer.parseInt(split[3]) > 0){
 						System.err.println("Grafo tem lower bound!!");
@@ -87,9 +87,9 @@ public class Network {
 					}
 					
 					if(split.length == 7)
-						newArc.getProps().put("flow", Integer.parseInt(split[6]));
+						newArc.set("flow", Integer.parseInt(split[6]));
 					else
-						newArc.getProps().put("flow", 0);
+						newArc.set("flow", 0);
 				}
 				
 			}
@@ -111,20 +111,20 @@ public class Network {
 				//Adiciona o arco na rede residual no mesmo sentido
 				Arc newResArc = new Arc(arc.getHead(), arc.getTail());
 				newResArc.getTail().getResidualArcs().add(newResArc);
-				newResArc.getProps().put("cost", arc.getProps().get("cost"));					
+				newResArc.set("cost", arc.get("cost"));					
 				
 				//Adiciona o arco na rede residual no sentido inverso
 				Arc newResArcInv = new Arc(arc.getTail(), arc.getHead());
 				newResArcInv.getTail().getResidualArcs().add(newResArcInv);
-				newResArcInv.getProps().put("cost", -(Integer)arc.getProps().get("cost"));
+				newResArcInv.set("cost", -(Integer)arc.get("cost"));
 				
 				//Faz a ligação dos arcos do grafo com os arcos da rede residual
-				arc.getProps().put("res.arc", newResArc);
-				arc.getProps().put("res.arcInv", newResArcInv);
+				arc.set("res.arc", newResArc);
+				arc.set("res.arcInv", newResArcInv);
 				
 				//Faz a ligação dos arcos da rede residual com os arcos do grafo
-				newResArc.getProps().put("arc", arc);
-				newResArcInv.getProps().put("arcInv", arc);
+				newResArc.set("arc", arc);
+				newResArcInv.set("arcInv", arc);
 			}			
 		}
 		
@@ -170,20 +170,20 @@ public class Network {
 			
 			//Se existe um arco com sentido inverso no grafo
 			if(resArc.getProps().containsKey("arcInv")){
-				auxArc = (Arc)resArc.getProps().get("arcInv");
-				if((Integer)auxArc.getProps().get("flow") >= flow){
-					auxArc.getProps().put("flow", (Integer)auxArc.getProps().get("flow") - auxFlow);
+				auxArc = (Arc)resArc.get("arcInv");
+				if((Integer)auxArc.get("flow") >= flow){
+					auxArc.set("flow", (Integer)auxArc.get("flow") - auxFlow);
 					auxFlow = 0;
 				}else{
-					auxFlow -= (Integer)auxArc.getProps().get("flow");
-					auxArc.getProps().put("flow", 0);				
+					auxFlow -= (Integer)auxArc.get("flow");
+					auxArc.set("flow", 0);				
 				}
 			}
 
 			//Se existe um arco com o mesmo sentido no grafo
 			if(resArc.getProps().containsKey("arc") && auxFlow > 0){
-				auxArc = (Arc)resArc.getProps().get("arc");
-				auxArc.getProps().put("flow", (Integer)auxArc.getProps().get("flow") + auxFlow);
+				auxArc = (Arc)resArc.get("arc");
+				auxArc.set("flow", (Integer)auxArc.get("flow") + auxFlow);
 			}
 
 		}
@@ -204,7 +204,7 @@ public class Network {
 		}
 
 		for(Arc arc : s.getArcs())
-			valueMaxFlow += (Integer)arc.getProps().get("flow");
+			valueMaxFlow += (Integer)arc.get("flow");
 		
 		return valueMaxFlow;
 	}
@@ -232,7 +232,7 @@ public class Network {
 		}
 
 		for(Arc arc : s.getArcs())
-			valueMaxFlow += (Integer)arc.getProps().get("flow");
+			valueMaxFlow += (Integer)arc.get("flow");
 		
 		return valueMaxFlow;
 	}
@@ -245,19 +245,19 @@ public class Network {
 		//Inclui um nó que terá aresta de todos os nós para ele e dele para todos os nós
 		
 		Node superNode = new Node(-1);
-		superNode.getProps().put("flow", 0);
+		superNode.set("flow", 0);
 		
 		for(Node node : nodes){
 			Arc arc = new Arc(node, superNode);
-			arc.getProps().put("cap", LARGE);
-			arc.getProps().put("cost", Large);
-			arc.getProps().put("flow", 0);
+			arc.set("cap", LARGE);
+			arc.set("cost", Large);
+			arc.set("flow", 0);
 			superNode.getArcs().add(arc);
 			
 			Arc arcInv = new Arc(superNode, node);
-			arcInv.getProps().put("cap", LARGE);
-			arcInv.getProps().put("cost", Large);
-			arcInv.getProps().put("flow", 0);
+			arcInv.set("cap", LARGE);
+			arcInv.set("cost", Large);
+			arcInv.set("flow", 0);
 			node.getArcs().add(arcInv);
 		}
 		
@@ -269,30 +269,30 @@ public class Network {
 		
 		//Cria os nós s e t no grafo
 		Node nodeS = new Node(-1);
-		nodeS.getProps().put("flow", 0);
+		nodeS.set("flow", 0);
 		nodes.add(nodeS);
 		Node nodeT = new Node(-2);
-		nodeT.getProps().put("flow", 0);
+		nodeT.set("flow", 0);
 		nodes.add(nodeT);
 		
 		//Adiciona arcos do nó S para os nós com fluxo positivo
 		for(int i = 0; i < nodes.size() - 2; i++){
-			if((Integer)nodes.get(i).getProps().get("flow") > 0){
+			if((Integer)nodes.get(i).get("flow") > 0){
 				Arc newArc = new Arc(nodes.get(i), nodeS);
-				newArc.getProps().put("cap", nodes.get(i).getProps().get("flow"));
-				newArc.getProps().put("flow", 0);				
-				newArc.getProps().put("cost", 0);
+				newArc.set("cap", nodes.get(i).get("flow"));
+				newArc.set("flow", 0);				
+				newArc.set("cost", 0);
 				nodeS.getArcs().add(newArc);				
 			}
 		}
 
 		//Adiciona arcos dos nós com fluxo negativo para o nó T
 		for(int i = 0; i < nodes.size() - 2; i++){
-			if((Integer)nodes.get(i).getProps().get("flow") < 0){
+			if((Integer)nodes.get(i).get("flow") < 0){
 				Arc newArc = new Arc(nodeT, nodes.get(i)); 
-				newArc.getProps().put("cap", -(Integer)nodes.get(i).getProps().get("flow"));
-				newArc.getProps().put("flow", 0);
-				newArc.getProps().put("cost", 0);
+				newArc.set("cap", -(Integer)nodes.get(i).get("flow"));
+				newArc.set("flow", 0);
+				newArc.set("cost", 0);
 				nodes.get(i).getArcs().add(newArc);	
 			}
 		}		
@@ -305,11 +305,11 @@ public class Network {
 		
 		//Determina o valor do fluxo máximo
 		for(Arc arc : nodes.get(nodes.size()-2).getArcs())
-			flow += (Integer)arc.getProps().get("flow");
+			flow += (Integer)arc.get("flow");
 		
 		//Computa a soma dos fluxos positivos 
 		for(Node node : nodes)
-			flowNodes += (Integer)node.getProps().get("flow") > 0 ? (Integer)node.getProps().get("flow") : 0;
+			flowNodes += (Integer)node.get("flow") > 0 ? (Integer)node.get("flow") : 0;
 
 		if(flow == flowNodes)
 			return true;
@@ -357,7 +357,7 @@ public class Network {
 		
 		for(Node node : nodes)
 			for(Arc arc : node.getArcs())
-				costFlow += (Integer)arc.getProps().get("flow") * (Integer)arc.getProps().get("cost");
+				costFlow += (Integer)arc.get("flow") * (Integer)arc.get("cost");
 		
 		return costFlow;
 	}
@@ -372,20 +372,20 @@ public class Network {
 		includeSuperNodeSSP();
 		
 		for(Node node : nodes){
-			node.getProps().put("ssp.p", 0);
-			node.getProps().put("ssp.e", node.getProps().get("flow"));
+			node.set("ssp.p", 0);
+			node.set("ssp.e", node.get("flow"));
 		}
 		
 		for(Node node : nodes){
 			for(Arc arc : node.getArcs()){
-				arc.getProps().put("flow", 0);
+				arc.set("flow", 0);
 			}
 		}
 		
 		//Inicializa os custos reduzidos nos arcos da rede residual
 		for(Node node : nodes)
 			for(Arc resArc : node.getResidualArcs())
-				resArc.getProps().put("reducedCost", resArc.getProps().get("cost"));
+				resArc.set("reducedCost", resArc.get("cost"));
 		
 		//Cria uma lista para o conjunto de nós de exesso e outra para o conjunto de nós de deficit
 		ArrayList<Node> excessNodes = new ArrayList<Node>();
@@ -393,9 +393,9 @@ public class Network {
 		
 		//Popula os arrays de nós de excesso e deficit
 		for(Node node : nodes){
-			if((Integer)node.getProps().get("ssp.e") < 0)
+			if((Integer)node.get("ssp.e") < 0)
 				deficitNodes.add(node);
-			else if((Integer)node.getProps().get("ssp.e") > 0)
+			else if((Integer)node.get("ssp.e") > 0)
 				excessNodes.add(node);
 		}
 		
@@ -410,25 +410,25 @@ public class Network {
 			Node auxNode = l;
 			Arc auxResArc;
 			while(auxNode.getProps().containsKey("djk.parent")){
-				auxResArc = (Arc)auxNode.getProps().get("djk.parent");			
+				auxResArc = (Arc)auxNode.get("djk.parent");			
 				path.add(auxResArc);			
 				auxNode = auxResArc.getTail();			
 			}
 		
 			//Atualiza os pontenciais
 			for(Node node : nodes)
-				node.getProps().put("ssp.p", (Integer)node.getProps().get("ssp.p") - (Integer)node.getProps().get("djk.dist"));
+				node.set("ssp.p", (Integer)node.get("ssp.p") - (Integer)node.get("djk.dist"));
 
 			//Calcula delta
-			delta = Math.min((Integer)k.getProps().get("ssp.e"), -(Integer)l.getProps().get("ssp.e"));
+			delta = Math.min((Integer)k.get("ssp.e"), -(Integer)l.get("ssp.e"));
 			delta = Math.min(delta, path.getBottleneck());
 			
 			//Passa o fluxo pelo caminho
 			updateFlow(path, delta);
 			
 			//Atualiza os valores de e(k) e e(l)
-			k.getProps().put("ssp.e", (Integer)k.getProps().get("ssp.e") - delta);
-			l.getProps().put("ssp.e", (Integer)l.getProps().get("ssp.e") + delta);		
+			k.set("ssp.e", (Integer)k.get("ssp.e") - delta);
+			l.set("ssp.e", (Integer)l.get("ssp.e") + delta);		
 			path.clear();
 			
 			//Faz o update
@@ -448,7 +448,7 @@ public class Network {
 		//Atualiza os custos reduzidos
 		for(Node node : nodes){
 			for(Arc resArc : node.getResidualArcs()){
-				resArc.getProps().put("reducedCost", (Integer)resArc.getProps().get("cost") - (Integer)resArc.getTail().getProps().get("spp.p")  + (Integer)resArc.getHead().getProps().get("spp.p") );
+				resArc.set("reducedCost", (Integer)resArc.get("cost") - (Integer)resArc.getTail().get("spp.p")  + (Integer)resArc.getHead().get("spp.p") );
 			}
 		}
 		
