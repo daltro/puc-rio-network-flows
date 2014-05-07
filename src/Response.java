@@ -1,14 +1,14 @@
 
-public final class ResponseCycleCanceling {
+public final class Response {
 	private int costFlow;
 	private boolean feasibleSolution;
 
-	public ResponseCycleCanceling(int _costFlow) {
+	public Response(int _costFlow) {
 		this.costFlow = _costFlow;
 		this.feasibleSolution = true;
 	}
 	
-	public ResponseCycleCanceling(boolean _feasibleSolution) {
+	public Response(boolean _feasibleSolution) {
 		this.feasibleSolution = _feasibleSolution;
 	}
 	

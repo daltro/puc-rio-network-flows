@@ -6,7 +6,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 
+
+
 public class Network {
+	
+	public static final int LARGE = Integer.MAX_VALUE / 2;
+	public static final int Large = Integer.MAX_VALUE / 100;
 	
 	//private Node[] nodes = new Node[0];
 	private ArrayList<Node> nodes = new ArrayList<Node>();
@@ -239,6 +244,28 @@ public class Network {
 		return nodes;
 	}
 	
+	public void includeSuperNodeSSP(){
+		//Inclui um nó que terá aresta de todos os nós para ele e dele para todos os nós
+		
+		Node superNode = new Node(-1);
+		superNode.getProps().put("flow", 0);
+		
+		for(Node node : nodes){
+			Arc arc = new Arc(node, superNode);
+			arc.getProps().put("cap", LARGE);
+			arc.getProps().put("cost", Large);
+			arc.getProps().put("flow", 0);
+			superNode.getArcs().add(arc);
+			
+			Arc arcInv = new Arc(superNode, node);
+			arcInv.getProps().put("cap", LARGE);
+			arcInv.getProps().put("cost", Large);
+			arcInv.getProps().put("flow", 0);
+			node.getArcs().add(arcInv);
+		}
+		
+	}
+	
 	public void transformDistributionToMaxFlow(){
 		//Transforma o grafo do problema de distribuição com vários nós de suprimento e demanda
 		//para um grafo de um problema de fluxo máximo com uma fonte e um sorvedouro
@@ -293,8 +320,8 @@ public class Network {
 			return false;
 	}
 
-	public ResponseCycleCanceling cycleCanceling(){
-		ResponseCycleCanceling responseCycleCanceling; // = new ResponseCycleCanceling();
+	public Response cycleCanceling(){
+		Response responseCycleCanceling; // = new ResponseCycleCanceling();
 		
 		// Inicializa rede
 		transformDistributionToMaxFlow();
@@ -307,7 +334,7 @@ public class Network {
 
 		//Verifica se o problema tem solução viável
 		if(!flowIsFeasibleToDistribution()){
-			responseCycleCanceling = new ResponseCycleCanceling(false);
+			responseCycleCanceling = new Response(false);
 			return responseCycleCanceling;
 		}
 		
@@ -324,7 +351,7 @@ public class Network {
 		
 		System.out.println("###No more cycles;");
 		
-		responseCycleCanceling = new ResponseCycleCanceling(calcCostFlow());
+		responseCycleCanceling = new Response(calcCostFlow());
 		return responseCycleCanceling;
 	}
 	
@@ -338,8 +365,14 @@ public class Network {
 		return costFlow;
 	}
 	
-	public ResponseCycleCanceling sucessiveShortestPath(){
-		ResponseCycleCanceling response;
+	public Response sucessiveShortestPath(){
+		Response response;
+		Node k, l;
+		Path path = new Path();
+		int delta;
+
+		//Inclui um super nó e arcos deste nó para todos os outros nós e de todos os nós para ele
+		includeSuperNodeSSP();
 		
 		for(Node node : nodes){
 			node.getProps().put("ssp.p", 0);
@@ -348,12 +381,80 @@ public class Network {
 		
 		for(Node node : nodes){
 			for(Arc arc : node.getArcs()){
-				arc.getProps().put("flow", 0);
+				arc.getProps().put("flow", 0);			
 			}
 		}
 		
-		response = new ResponseCycleCanceling(calcCostFlow());
+		//Inicializa os custos reduzidos nos arcos da rede residual
+		for(Node node : nodes)
+			for(ResidualArc resArc : node.getResidualArcs())
+				resArc.getProps().put("reducedCost", resArc.getProps().get("cost"));			
+		
+		//Cria uma lista para o conjunto de nós de exesso e outra para o conjunto de nós de deficit
+		ArrayList<Node> excessNodes = new ArrayList<Node>();
+		ArrayList<Node> deficitNodes = new ArrayList<Node>();
+		
+		//Popula os arrays de nós de excesso e deficit
+		for(Node node : nodes){
+			if((Integer)node.getProps().get("ssp.e") < 0)
+				deficitNodes.add(node);
+			else if((Integer)node.getProps().get("ssp.e") > 0)
+				excessNodes.add(node);
+		}
+		
+		while(excessNodes.size() > 0){
+			k = excessNodes.remove(0);
+			l = deficitNodes.remove(0);
+			
+			//Calcula as distâncias de k para tdos os outros vértices
+			Dijkstra.doDijkstra(nodes, k);
+			
+			//Encontra o caminho de k até s
+			Node auxNode = l;
+			ResidualArc auxResArc;
+			while(auxNode.getProps().containsKey("djk.parent")){
+				auxResArc = (ResidualArc)auxNode.getProps().get("djk.parent");			
+				path.add(auxResArc);			
+				auxNode = (Node)auxResArc.getTail();			
+			}
+		
+			//Atualiza os pontenciais
+			for(Node node : nodes)
+				node.getProps().put("ssp.p", (Integer)node.getProps().get("ssp.p") - (Integer)node.getProps().get("djk.dist"));
+
+			//Calcula delta
+			delta = Math.min((Integer)k.getProps().get("ssp.e"), -(Integer)l.getProps().get("ssp.e"));
+			delta = Math.min(delta, path.getBottleneck());
+			
+			//Passa o fluxo pelo caminho
+			updateFlow(path, delta);
+			
+			//Atualiza os valores de e(k) e e(l)
+			k.getProps().put("ssp.e", (Integer)k.getProps().get("ssp.e") - delta);
+			l.getProps().put("ssp.e", (Integer)l.getProps().get("ssp.e") + delta);		
+			path.clear();
+			
+			//Faz o update
+			updateSSP();
+			
+		}
+		
+		
+		response = new Response(calcCostFlow());
 		return response;
+	}
+	
+	public void updateSSP(){
+		//Atualiza a rede residual
+		reCreateResidualNetwork();
+		
+		//Atualiza os custos reduzidos
+		for(Node node : nodes){
+			for(ResidualArc resArc : node.getResidualArcs()){
+				resArc.getProps().put("reducedCost", (Integer)resArc.getProps().get("cost") - (Integer)resArc.getTail().getProps().get("spp.p")  + (Integer)resArc.getHead().getProps().get("spp.p") );
+			}
+		}
+		
 	}
 	
 }

@@ -68,7 +68,7 @@ public class Main {
 		}
 */
 		
-		ResponseCycleCanceling response = newNet.cycleCanceling();
+		Response response = newNet.cycleCanceling();
 		if(response.isFeasibleSolution())
 			System.out.println("Custo do fluxo: " + response.getCostFlow());
 		else

@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 
@@ -8,14 +9,14 @@ public class Dijkstra {
 	public static final String DJK_PARENT="djk.parent";
 	public static final String DJK_ARC_COST = "cost";
 	
-	public static final void doDijkstra(Network net, Node startNode){
+	public static final void doDijkstra(ArrayList<Node> nodes, Node startNode){
 		
-		for (Node n : net.getNodes()){
+		for (Node n : nodes){
 			n.getProps().put(DJK_DIST, Integer.MAX_VALUE);
 			n.getProps().remove(DJK_PARENT);
 		}
 		
-		PriorityQueue<Node> queue = new PriorityQueue<>(net.getNodes().size(), new Comparator<Node>() {
+		PriorityQueue<Node> queue = new PriorityQueue<>(nodes.size(), new Comparator<Node>() {
 			@Override
 			public int compare(Node o1, Node o2) {
 				Integer i1 = (Integer)o1.getProps().get(DJK_DIST);
@@ -25,7 +26,7 @@ public class Dijkstra {
 		});
 		
 		startNode.getProps().put(DJK_DIST, 0);
-		queue.addAll(net.getNodes());
+		queue.addAll(nodes);
 		
 		while (!queue.isEmpty()){
 			
