@@ -5,7 +5,7 @@ import java.util.Map;
 public final class Node {
 	private final int id;
 	private final ArrayList<Arc> arcs = new ArrayList<Arc>(2);
-	private final ArrayList<ResidualArc> resArcs = new ArrayList<ResidualArc>(2);
+	private final ArrayList<Arc> resArcs = new ArrayList<Arc>(2);
 	private final HashMap<String,Object> props = new HashMap<>(4);
 	
 	public Node(int id) {
@@ -24,7 +24,7 @@ public final class Node {
 		return arcs;
 	}
 	
-	public ArrayList<ResidualArc> getResidualArcs() {
+	public ArrayList<Arc> getResidualArcs() {
 		return resArcs;
 	}
 	

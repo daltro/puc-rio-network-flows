@@ -36,7 +36,7 @@ public class Dijkstra {
 				break;
 			}
 			
-			for (ResidualArc arc : u.getResidualArcs()){
+			for (Arc arc : u.getResidualArcs()){
 				
 				if ((Integer)arc.getProps().get(DJK_ARC_COST)<0){
 					continue;

@@ -1,5 +1,3 @@
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Stack;
 
@@ -10,11 +8,11 @@ public class DFSNetworkRes {
 	private static final String DFS_V = "dfs.V";
 
 	private static final class DFSStack {
-		public final Iterator<ResidualArc> linkIterator;
+		public final Iterator<Arc> linkIterator;
 		public final Node node;
-		public final ResidualArc actualArc;
+		public final Arc actualArc;
 
-		public DFSStack(Node node, ResidualArc link) {
+		public DFSStack(Node node, Arc link) {
 			this.node = node;
 			this.linkIterator = node.getResidualArcs().iterator();
 			this.actualArc = link;
@@ -24,7 +22,7 @@ public class DFSNetworkRes {
 	public Path findPath(Node nodeStart, Node nodeEnd, int cut) {
 		Path resPath = new Path();
 		Stack<DFSStack> stack = new Stack<>();
-		ResidualArc actualArc = nodeStart.getResidualArcs().iterator().next();
+		Arc actualArc = nodeStart.getResidualArcs().iterator().next();
 
 		DFSStack stackStep = new DFSStack(nodeStart, actualArc);
 		setVisited(nodeStart);
@@ -39,7 +37,7 @@ public class DFSNetworkRes {
 				continue;
 			}
 
-			ResidualArc link = stkNode.linkIterator.next();
+			Arc link = stkNode.linkIterator.next();
 			if((Integer)link.getProps().get("cap") < cut)
 				continue;
 			

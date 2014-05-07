@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.LinkedList;
 
 public class BelmanFord {
 
@@ -28,7 +27,7 @@ public class BelmanFord {
 			
 			for (int j=0; j<nodes.size(); j++){
 								
-				for (ResidualArc resArc : nodes.get(j).getResidualArcs()){				
+				for (Arc resArc : nodes.get(j).getResidualArcs()){				
 					//Despresa arestas com capacidade igual a zero
 					if((Integer)resArc.getProps().get("cap") == 0)
 						continue;
@@ -75,7 +74,7 @@ public class BelmanFord {
 		for (int j=0; j<nodes.size(); j++){
 			Node node = nodes.get(j);
 			
-			for (ResidualArc resArc : node.getResidualArcs()){
+			for (Arc resArc : node.getResidualArcs()){
 				//Despresa arestas com capacidade igual a zero
 				if((Integer)resArc.getProps().get("cap") == 0)
 					continue;
@@ -88,18 +87,18 @@ public class BelmanFord {
 					distTail += cost;
 				
 				if (distTail<distHead){					
-					ResidualArc resArcIt = (ResidualArc)node.getProps().get("bf.parentResArc");
+					Arc resArcIt = (Arc)node.getProps().get("bf.parentResArc");
 					
 					do {
 						theCycle.add(resArcIt);
-						resArcIt = (ResidualArc)resArcIt.getTail().getProps().get("bf.parentResArc");
+						resArcIt = (Arc)resArcIt.getTail().getProps().get("bf.parentResArc");
 					} while (!theCycle.contains(resArcIt));
 					
 					theCycle.clear();
 					
 					do {
 						theCycle.add(resArcIt);
-						resArcIt = (ResidualArc)resArcIt.getTail().getProps().get("bf.parentResArc");
+						resArcIt = (Arc)resArcIt.getTail().getProps().get("bf.parentResArc");
 						if((Integer)resArcIt.getProps().get("cap") == 0){
 							continuar = true;
 							break;

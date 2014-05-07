@@ -3,8 +3,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
 
 
 
@@ -17,16 +15,16 @@ public class Network {
 	private ArrayList<Node> nodes = new ArrayList<Node>();
 		
 	public void reCreateResidualNetwork(){
-		ResidualArc auxResArc;
+		Arc auxResArc;
 		
 		for(Node node : nodes){
 
-			for(Arc arc : node.getArcs()){		
-				auxResArc = (ResidualArc)arc.getProps().get("res.arc");
+			for(Arc arc : node.getArcs()){
+				auxResArc = (Arc)arc.getProps().get("res.arc");
 				auxResArc.getProps().put("cap", (Integer)arc.getProps().get("cap") - (Integer)arc.getProps().get("flow") );
 				
-				auxResArc = (ResidualArc)arc.getProps().get("res.arcInv");
-				auxResArc.getProps().put("cap", (Integer)arc.getProps().get("flow") );					
+				auxResArc = (Arc)arc.getProps().get("res.arcInv");
+				auxResArc.getProps().put("cap", arc.getProps().get("flow") );					
 			}
 			
 		}		
@@ -39,7 +37,6 @@ public class Network {
 			@SuppressWarnings("resource")
 			BufferedReader in = new BufferedReader(fin);
 			
-			boolean nodesEnded = false;
 			int qtdNodes = 0;
 			
 			String line;
@@ -112,12 +109,12 @@ public class Network {
 		for(Node node : nodes){
 			for(Arc arc : node.getArcs()){
 				//Adiciona o arco na rede residual no mesmo sentido
-				ResidualArc newResArc = new ResidualArc(arc.getHead(), arc.getTail());
+				Arc newResArc = new Arc(arc.getHead(), arc.getTail());
 				newResArc.getTail().getResidualArcs().add(newResArc);
-				newResArc.getProps().put("cost", (Integer)arc.getProps().get("cost"));					
+				newResArc.getProps().put("cost", arc.getProps().get("cost"));					
 				
 				//Adiciona o arco na rede residual no sentido inverso
-				ResidualArc newResArcInv = new ResidualArc(arc.getTail(), arc.getHead());
+				Arc newResArcInv = new Arc(arc.getTail(), arc.getHead());
 				newResArcInv.getTail().getResidualArcs().add(newResArcInv);
 				newResArcInv.getProps().put("cost", -(Integer)arc.getProps().get("cost"));
 				
@@ -168,7 +165,7 @@ public class Network {
 	public void updateFlow(Path path, int flow){
 		Arc auxArc;
 		int auxFlow;
-		for(ResidualArc resArc : path.getPath()){
+		for(Arc resArc : path.getPath()){
 			auxFlow = flow;
 			
 			//Se existe um arco com sentido inverso no grafo
@@ -282,7 +279,7 @@ public class Network {
 		for(int i = 0; i < nodes.size() - 2; i++){
 			if((Integer)nodes.get(i).getProps().get("flow") > 0){
 				Arc newArc = new Arc(nodes.get(i), nodeS);
-				newArc.getProps().put("cap", (Integer)nodes.get(i).getProps().get("flow"));
+				newArc.getProps().put("cap", nodes.get(i).getProps().get("flow"));
 				newArc.getProps().put("flow", 0);				
 				newArc.getProps().put("cost", 0);
 				nodeS.getArcs().add(newArc);				
@@ -381,14 +378,14 @@ public class Network {
 		
 		for(Node node : nodes){
 			for(Arc arc : node.getArcs()){
-				arc.getProps().put("flow", 0);			
+				arc.getProps().put("flow", 0);
 			}
 		}
 		
 		//Inicializa os custos reduzidos nos arcos da rede residual
 		for(Node node : nodes)
-			for(ResidualArc resArc : node.getResidualArcs())
-				resArc.getProps().put("reducedCost", resArc.getProps().get("cost"));			
+			for(Arc resArc : node.getResidualArcs())
+				resArc.getProps().put("reducedCost", resArc.getProps().get("cost"));
 		
 		//Cria uma lista para o conjunto de nós de exesso e outra para o conjunto de nós de deficit
 		ArrayList<Node> excessNodes = new ArrayList<Node>();
@@ -411,11 +408,11 @@ public class Network {
 			
 			//Encontra o caminho de k até s
 			Node auxNode = l;
-			ResidualArc auxResArc;
+			Arc auxResArc;
 			while(auxNode.getProps().containsKey("djk.parent")){
-				auxResArc = (ResidualArc)auxNode.getProps().get("djk.parent");			
+				auxResArc = (Arc)auxNode.getProps().get("djk.parent");			
 				path.add(auxResArc);			
-				auxNode = (Node)auxResArc.getTail();			
+				auxNode = auxResArc.getTail();			
 			}
 		
 			//Atualiza os pontenciais
@@ -450,7 +447,7 @@ public class Network {
 		
 		//Atualiza os custos reduzidos
 		for(Node node : nodes){
-			for(ResidualArc resArc : node.getResidualArcs()){
+			for(Arc resArc : node.getResidualArcs()){
 				resArc.getProps().put("reducedCost", (Integer)resArc.getProps().get("cost") - (Integer)resArc.getTail().getProps().get("spp.p")  + (Integer)resArc.getHead().getProps().get("spp.p") );
 			}
 		}

@@ -37,9 +37,6 @@ public final class Arc {
 			else if (e.getValue() instanceof Arc){
 				res+="Arc("+((Arc)e.getValue()).getTail().getId()+"->"+((Arc)e.getValue()).getHead().getId()+")";
 			}
-			else if (e.getValue() instanceof ResidualArc){
-				res+="ResidualArc("+((ResidualArc)e.getValue()).getTail().getId()+"->"+((ResidualArc)e.getValue()).getHead().getId()+")";
-			}			
 			else{
 				res+=e.getValue();
 			}

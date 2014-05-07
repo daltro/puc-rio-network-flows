@@ -2,21 +2,21 @@ import java.util.ArrayList;
 
 public final class Path {
 	
-	private final ArrayList<ResidualArc> path;
+	private final ArrayList<Arc> path;
 
 	public Path() {
-		 path = new ArrayList<ResidualArc>();
+		 path = new ArrayList<Arc>();
 	}
 	
-	public ArrayList<ResidualArc> getPath(){
+	public ArrayList<Arc> getPath(){
 		return path;
 	}
 	
-	public void add(ResidualArc resArc){
+	public void add(Arc resArc){
 		path.add(resArc);
 	}
 	
-	public boolean contains(ResidualArc resArc){
+	public boolean contains(Arc resArc){
 		return path.contains(resArc);
 	}
 	
@@ -41,10 +41,10 @@ public final class Path {
 	}
 	
 	public void invertPath(){
-		ResidualArc auxResArc;
+		Arc auxResArc;
 		int pos;
 		
-		for(int i = 0; i < (Integer)(path.size()+1)/2; i++){
+		for(int i = 0; i < (path.size()+1)/2; i++){
 			auxResArc = path.get(i);
 			pos = path.size()-i-1;
 			path.set(i, path.get(pos));
