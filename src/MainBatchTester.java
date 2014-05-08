@@ -132,6 +132,7 @@ public class MainBatchTester {
 		if (!methodResult || result[0]==null) {
 			time[0] = 0;
 			result[0] = new Response(0);
+			methodResult = false;
 		}
 		
 		String reportLine = instanceName + "," + type + ","
