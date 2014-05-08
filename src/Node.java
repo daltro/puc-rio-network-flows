@@ -13,30 +13,42 @@ public final class Node {
 	}
 	
 	public int getId(){
+		testInterruption();
 		return id;
 	}
 	
 	public Map<String,Object> getProps(){
+		testInterruption();
 		return props;
+	}
+
+	private static final void testInterruption() {
+		if (Thread.interrupted())
+			throw new RuntimeException("Thread interrompida. Tempo excedido.");
 	}
 	
 	public Object get(String key){
+		testInterruption();
 		return props.get(key);
 	}
 	
 	public void set(String key, Object value){
+		testInterruption();
 		props.put(key, value);
 	}
 	
 	public ArrayList<Arc> getArcs() {
+		testInterruption();
 		return arcs;
 	}
 	
 	public ArrayList<Arc> getResidualArcs() {
+		testInterruption();
 		return resArcs;
 	}
 	
 	public Arc hasArc(Node head){
+		testInterruption();
 		for(Arc arc : arcs){
 			if(arc.getHead() == head)
 				return arc;
@@ -46,6 +58,7 @@ public final class Node {
 	
 	@Override
 	public String toString() {
+		testInterruption();
 		String res = "Node(id="+id;
 		for (Map.Entry<String, Object> e : props.entrySet()){
 			res += ", "+e.getKey()+"=";

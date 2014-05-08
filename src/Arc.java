@@ -14,28 +14,39 @@ public final class Arc {
 		this.tail = tail;
 	}
 
+	private static final void testInterruption() {
+		if (Thread.interrupted())
+			throw new RuntimeException("Thread interrompida. Tempo excedido.");
+	}
+
 	public HashMap<String, Object> getProps() {
+		testInterruption();
 		return props;
 	}
 	
 	public Object get(String key){
+		testInterruption();
 		return props.get(key);
 	}
 	
 	public void set(String key, Object value){
+		testInterruption();
 		props.put(key, value);
 	}
 	
 	public Node getHead() {
+		testInterruption();
 		return head;
 	}
 	
 	public Node getTail() {
+		testInterruption();
 		return tail;
 	}
 	
 	@Override
 	public String toString() {
+		testInterruption();
 		String res = "Arc("+tail.getId()+"->"+head.getId();
 		for (Map.Entry<String, Object> e : props.entrySet()){
 			res += ", "+e.getKey()+"=";

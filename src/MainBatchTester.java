@@ -107,8 +107,15 @@ public class MainBatchTester {
 		};
 		runThread.setPriority(Thread.MAX_PRIORITY);
 		runThread.setDaemon(true);
+		runThread.setUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+			@Override
+			public void uncaughtException(Thread t, Throwable e) {
+				System.out.println("* !! Thread interrompida por exceção: "+e.getClass().getName()+" - "+e.getMessage());
+			}
+		});
 		
 		final long timeout = 1000l * 60000l * 5l;
+		//final long timeout = 5000l;
 		
 		runThread.start();
 		runThread.join(timeout); // Esperar no máximo 5 minutos.
@@ -117,12 +124,12 @@ public class MainBatchTester {
 		
 		if (runThread.isAlive()) {
 			runThread.interrupt();
-			runThread.join(1000);
+			runThread.join(5000);
 			if (runThread.isAlive())
 				runThread.stop(new RuntimeException("Tempo limite excedido!"));
 		}
 		
-		if (!methodResult) {
+		if (!methodResult || result[0]==null) {
 			time[0] = 0;
 			result[0] = new Response(0);
 		}
