@@ -114,7 +114,7 @@ public class MainBatchTester {
 			}
 		});
 		
-		final long timeout = 1000l * 60000l * 5l;
+		final long timeout = 1000l * 60l * 5l;
 		//final long timeout = 5000l;
 		
 		runThread.start();
