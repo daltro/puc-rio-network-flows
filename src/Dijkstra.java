@@ -11,7 +11,7 @@ public class Dijkstra {
 	public static final String DJK_ARC_COST = "reducedCost";
 	
 	public static final void doDijkstra(ArrayList<Node> nodes, Node startNode,
-	    final int large) {
+	    final int large, int cut) {
 		
 		for (Node n : nodes) {
 			n.set(DJK_DIST, large);
@@ -50,7 +50,7 @@ public class Dijkstra {
 			}
 			
 			for (Arc arc : u.getResidualArcs()) {
-				if((Integer)arc.get("cap") == 0)
+				if((Integer)arc.get("cap") <= cut)
 					continue;
 				
 				if ((Integer) arc.get(DJK_ARC_COST) < 0) {

@@ -440,22 +440,26 @@ public class Network {
 				resArc.set("reducedCost", resArc.get("cost"));
 		
 		
-		return doSSP();
+		return doSSP(0);
 		
 	}
 	
-	public Response doSSP(){
+	public Response doSSP(int cut){
 		// Cria uma lista para o conjunto de nós de exesso e outra para o conjunto
 		// de nós de deficit
 		LinkedList<Node> excessNodes = new LinkedList<>();
 		LinkedList<Node> deficitNodes = new LinkedList<>();
 		
 		// Popula os arrays de nós de excesso e deficit
+		int e;
 		for (Node node : nodes) {
-			if ((Integer) node.get("ssp.e") < 0)
-				deficitNodes.add(node);
-			else if ((Integer) node.get("ssp.e") > 0)
-				excessNodes.add(node);
+			e = (Integer) node.get("ssp.e");
+			if(e != 0){
+				if (e <= cut)
+					deficitNodes.add(node);
+				if (e >= cut) 
+					excessNodes.add(node);
+			}
 		}
 		
 		while (excessNodes.size() > 0) {
@@ -463,7 +467,7 @@ public class Network {
 			Node l = deficitNodes.removeFirst();
 			
 			// Calcula as distâncias de k para tdos os outros vértices
-			Dijkstra.doDijkstra(nodes, k, largeCapacity);
+			Dijkstra.doDijkstra(nodes, k, largeCapacity, cut);
 		
 			// Encontra o caminho de k até s
 			Node auxNode = l;
@@ -476,9 +480,10 @@ public class Network {
 			}
 			
 			// Atualiza os pontenciais
-			for (Node node : nodes)
-				node.set("ssp.p",
-				    (Integer) node.get("ssp.p") - (Integer) node.get("djk.dist"));
+			for (Node node : nodes){
+				if(Math.abs((Integer)node.get("ssp.e")) >= cut)
+					node.set("ssp.p", (Integer) node.get("ssp.p") - (Integer) node.get("djk.dist"));
+			}
 			
 			// Calcula delta
 			int delta = Math.min((Integer) k.get("ssp.e"), -(Integer) l.get("ssp.e"));
@@ -493,7 +498,7 @@ public class Network {
 			path.clear();
 			
 			// Faz o update
-			updateSSP();
+			updateSSP(cut);
 			
 			if ((Integer) k.get("ssp.e") > 0)
 				excessNodes.addLast(k);
@@ -513,7 +518,7 @@ public class Network {
 	}
 	
 	
-	public void updateSSP() {
+	public void updateSSP(int cut) {
 		// Atualiza a rede residual
 		calculateResidualCapacities();
 		
@@ -521,6 +526,9 @@ public class Network {
 		for (Node node : nodes) {
 			
 			for (Arc resArc : node.getResidualArcs()) {
+				//if((Integer)resArc.get("cap") < cut)
+					//continue;
+				
 				resArc.set("reducedCost", (Integer) resArc.get("cost")
 				    - (Integer) resArc.getTail().get("ssp.p")
 				    + (Integer) resArc.getHead().get("ssp.p"));			
@@ -532,10 +540,35 @@ public class Network {
 
 	public Response capacityScaling(){
 		int maxEdgeCapacity = 0;
-		int delta;
+		int delta, flow;
+		Response response;
+		Arc auxArc;
 		Double deltaDouble;
 		Double log2_10 = Math.log10(2);
+
+		//-------------
+		// Inclui um super nó e arcos deste nó para todos os outros nós e de todos os nós para ele
+		includeSuperNodeSSP();
 		
+		createResidualNetwork();
+		
+		for (Node node : nodes) {
+			node.set("ssp.p", 0);
+			node.set("ssp.e", node.get("flow"));
+		}
+		
+		for (Node node : nodes) {
+			for (Arc arc : node.getArcs()) {
+				arc.set("flow", 0);
+			}
+		}
+		
+		// Inicializa os custos reduzidos nos arcos da rede residual
+		for (Node node : nodes)
+			for (Arc resArc : node.getResidualArcs())
+				resArc.set("reducedCost", resArc.get("cost"));
+		
+			
 		//Encontra a aresta com a maior capacidade
 		for(Node node : nodes)
 			for(Arc arc : node.getArcs())
@@ -543,16 +576,31 @@ public class Network {
 
 		deltaDouble =  Math.log10(maxEdgeCapacity) / log2_10;
 		delta = deltaDouble.intValue();
+		deltaDouble = Math.pow(2, delta);
+		delta = deltaDouble.intValue();
 		
 		while(delta >= 1){
+			//Red-code para concertar os curstos residuais negativos
+			for(Node node : nodes){
+				for(Arc resArc : node.getResidualArcs()){
+					if(((Integer)resArc.get("cap") >= delta) && ((Integer)resArc.get("reducedCost") < 0)){
+						auxArc = (Arc)resArc.get("arc"); //Ver se não tem que olhar o arco inverso para passar fluxo também
+						flow = (Integer)resArc.get("cap"); 
+						auxArc.getProps().put("flow", (Integer)auxArc.get("flow") + flow);
+						resArc.getTail().getProps().put("spp.e", (Integer)resArc.get("spp.e") - flow);
+						resArc.getHead().getProps().put("spp.e", (Integer)resArc.get("spp.e") + flow);
+					}
+				}
+			}
 			
-			
+			response = doSSP(delta);
+			if(response.isFeasibleSolution())
+				return response;
 			
 			delta /= 2;
 		}
-
 		
-		return new Response(10);
+		return new Response(false);
 	}
 	
 	public void printGraph(){
