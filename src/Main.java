@@ -28,9 +28,10 @@ public class Main {
 		System.out.println("Ok em " + timer + "ms.");
 		
 		timer = System.currentTimeMillis();
-		
+				
+		//Response response = newNet.cycleCanceling();
 		Response response = newNet.sucessiveShortestPath();
-		// Response response = newNet.cycleCanceling();
+		//Response response = newNet.CapacityScaling();
 		if (response.isFeasibleSolution())
 			System.out.println("Custo do fluxo: " + response.getCostFlow());
 		else
@@ -41,7 +42,7 @@ public class Main {
 		System.out.println(newNet.getNodes().size() + " visitados em " + timer
 		    + "ms.");
 		
-		newNet.dump(true, false, false);
+		//newNet.dump(true, false, false);
 		
 	}
 	

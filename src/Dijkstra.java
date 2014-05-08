@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.PriorityQueue;
 import java.util.TreeSet;
 
 public class Dijkstra {
@@ -16,7 +17,8 @@ public class Dijkstra {
 			n.set(DJK_DIST, large);
 			n.getProps().remove(DJK_PARENT_NODE);
 		}
-		
+
+/*		
 		TreeSet<Node> queue = new TreeSet<>(new Comparator<Node>() {
 			@Override
 			public int compare(Node o1, Node o2) {
@@ -25,19 +27,31 @@ public class Dijkstra {
 				return i1 - i2;
 			}
 		});
+*/
 		
+		PriorityQueue<Node> queue = new PriorityQueue<>(nodes.size(), new Comparator<Node>() {
+			@Override
+			public int compare(Node o1, Node o2) {
+				Integer i1 = (Integer) o1.get(DJK_DIST);
+				Integer i2 = (Integer) o2.get(DJK_DIST);
+				return i1 - i2;
+			}
+		});
+					
 		startNode.set(DJK_DIST, 0);
 		queue.addAll(nodes);
-		
+
 		while (!queue.isEmpty()) {
 			
-			Node u = queue.pollFirst();
+			Node u = queue.remove();
 			
 			if ((Integer) u.get(DJK_DIST) == large) {
 				break;
 			}
 			
 			for (Arc arc : u.getResidualArcs()) {
+				if((Integer)arc.get("cap") == 0)
+					continue;
 				
 				if ((Integer) arc.get(DJK_ARC_COST) < 0) {
 					throw new IllegalStateException(
