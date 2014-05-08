@@ -570,9 +570,11 @@ public class Network {
 		
 			
 		//Encontra a aresta com a maior capacidade
-		for(Node node : nodes)
+		for(Node node : nodes){
+			if(node.getId() == -1) continue;
 			for(Arc arc : node.getArcs())
 				maxEdgeCapacity = Math.max(maxEdgeCapacity, (Integer)arc.get("cap"));
+		}
 
 		deltaDouble =  Math.log10(maxEdgeCapacity) / log2_10;
 		delta = deltaDouble.intValue();
