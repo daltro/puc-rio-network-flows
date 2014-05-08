@@ -44,9 +44,10 @@ public class Network {
 		largeCost = Math.max(maxCap, maxCost);
 		largeCapacity = largeCost * 2;
 		
-		if((largeCost <= 0) || (largeCapacity <= 0))
-			throw new IllegalStateException("Valores para largeCost e largeCapacity negativo.");
-
+		if ((largeCost <= 0) || (largeCapacity <= 0))
+			throw new IllegalStateException(
+			    "Valores para largeCost e largeCapacity negativo.");
+		
 	}
 	
 	public void loadFromFile(File netFile) throws IOException {
@@ -355,10 +356,6 @@ public class Network {
 	
 	public Response cycleCanceling() {
 		
-		System.out.println("-------------------------------");
-		System.out.println("Rodando uma Cycles completa... ");
-		System.out.println("-------------------------------");
-		
 		Response responseCycleCanceling; // = new ResponseCycleCanceling();
 		
 		// Inicializa rede
@@ -393,7 +390,7 @@ public class Network {
 			calculateResidualCapacities();
 			cycle = BelmanFord.findNegativeCycles(nodes, nodes.size() - 2);
 			System.out.print(".");
-			if (++loops % 30 == 0)
+			if (++loops % 100 == 0)
 				System.out.println();
 		}
 		
@@ -413,9 +410,9 @@ public class Network {
 		
 		return costFlow;
 	}
-		
+	
 	public Response sucessiveShortestPath() {
-		//calculateLargeNumbers();
+		// calculateLargeNumbers();
 		
 		// Inclui um super nó e arcos deste nó para todos os outros nós e de todos
 		// os nós para ele
@@ -439,12 +436,11 @@ public class Network {
 			for (Arc resArc : node.getResidualArcs())
 				resArc.set("reducedCost", resArc.get("cost"));
 		
-		
 		return doSSP(0);
 		
 	}
 	
-	public Response doSSP(int cut){
+	public Response doSSP(int cut) {
 		// Cria uma lista para o conjunto de nós de exesso e outra para o conjunto
 		// de nós de deficit
 		LinkedList<Node> excessNodes = new LinkedList<>();
@@ -454,13 +450,15 @@ public class Network {
 		int e;
 		for (Node node : nodes) {
 			e = (Integer) node.get("ssp.e");
-			if(e != 0){
+			if (e != 0) {
 				if (e <= cut)
 					deficitNodes.add(node);
-				if (e >= cut) 
+				if (e >= cut)
 					excessNodes.add(node);
 			}
 		}
+		
+		int loops = 0;
 		
 		while (excessNodes.size() > 0) {
 			Node k = excessNodes.removeFirst();
@@ -468,7 +466,7 @@ public class Network {
 			
 			// Calcula as distâncias de k para tdos os outros vértices
 			Dijkstra.doDijkstra(nodes, k, largeCapacity, cut);
-		
+			
 			// Encontra o caminho de k até s
 			Node auxNode = l;
 			Arc auxResArc;
@@ -480,9 +478,10 @@ public class Network {
 			}
 			
 			// Atualiza os pontenciais
-			for (Node node : nodes){
-				if(Math.abs((Integer)node.get("ssp.e")) >= cut)
-					node.set("ssp.p", (Integer) node.get("ssp.p") - (Integer) node.get("djk.dist"));
+			for (Node node : nodes) {
+				if (Math.abs((Integer) node.get("ssp.e")) >= cut)
+					node.set("ssp.p",
+					    (Integer) node.get("ssp.p") - (Integer) node.get("djk.dist"));
 			}
 			
 			// Calcula delta
@@ -506,17 +505,19 @@ public class Network {
 			if ((Integer) l.get("ssp.e") < 0)
 				deficitNodes.addLast(l);
 			
+			System.out.print(".");
+			if (++loops % 90 == 0)
+				System.out.println();
 		}
 		
-		//Verifica se a solução é viável
-		for(Arc arc : nodes.get(nodes.size()-1).getArcs()){
-			if((Integer)arc.get("flow") > 0)
+		// Verifica se a solução é viável
+		for (Arc arc : nodes.get(nodes.size() - 1).getArcs()) {
+			if ((Integer) arc.get("flow") > 0)
 				return new Response(false);
 		}
 		
 		return new Response(calcCostFlow());
 	}
-	
 	
 	public void updateSSP(int cut) {
 		// Atualiza a rede residual
@@ -526,28 +527,29 @@ public class Network {
 		for (Node node : nodes) {
 			
 			for (Arc resArc : node.getResidualArcs()) {
-				//if((Integer)resArc.get("cap") < cut)
-					//continue;
+				// if((Integer)resArc.get("cap") < cut)
+				// continue;
 				
 				resArc.set("reducedCost", (Integer) resArc.get("cost")
 				    - (Integer) resArc.getTail().get("ssp.p")
-				    + (Integer) resArc.getHead().get("ssp.p"));			
+				    + (Integer) resArc.getHead().get("ssp.p"));
 			}
 			
 		}
 		
 	}
-
-	public Response capacityScaling(){
+	
+	public Response capacityScaling() {
 		int maxEdgeCapacity = 0;
 		int delta, flow;
 		Response response;
 		Arc auxArc;
 		Double deltaDouble;
 		Double log2_10 = Math.log10(2);
-
-		//-------------
-		// Inclui um super nó e arcos deste nó para todos os outros nós e de todos os nós para ele
+		
+		// -------------
+		// Inclui um super nó e arcos deste nó para todos os outros nós e de todos
+		// os nós para ele
 		includeSuperNodeSSP();
 		
 		createResidualNetwork();
@@ -568,35 +570,40 @@ public class Network {
 			for (Arc resArc : node.getResidualArcs())
 				resArc.set("reducedCost", resArc.get("cost"));
 		
-			
-		//Encontra a aresta com a maior capacidade
-		for(Node node : nodes){
-			if(node.getId() == -1) continue;
-			for(Arc arc : node.getArcs())
-				maxEdgeCapacity = Math.max(maxEdgeCapacity, (Integer)arc.get("cap"));
+		// Encontra a aresta com a maior capacidade
+		for (Node node : nodes) {
+			if (node.getId() == -1)
+				continue;
+			for (Arc arc : node.getArcs())
+				maxEdgeCapacity = Math.max(maxEdgeCapacity, (Integer) arc.get("cap"));
 		}
-
-		deltaDouble =  Math.log10(maxEdgeCapacity) / log2_10;
+		
+		deltaDouble = Math.log10(maxEdgeCapacity) / log2_10;
 		delta = deltaDouble.intValue();
 		deltaDouble = Math.pow(2, delta);
 		delta = deltaDouble.intValue();
 		
-		while(delta >= 1){
-			//Red-code para concertar os curstos residuais negativos
-			for(Node node : nodes){
-				for(Arc resArc : node.getResidualArcs()){
-					if(((Integer)resArc.get("cap") >= delta) && ((Integer)resArc.get("reducedCost") < 0)){
-						auxArc = (Arc)resArc.get("arc"); //Ver se não tem que olhar o arco inverso para passar fluxo também
-						flow = (Integer)resArc.get("cap"); 
-						auxArc.getProps().put("flow", (Integer)auxArc.get("flow") + flow);
-						resArc.getTail().getProps().put("spp.e", (Integer)resArc.get("spp.e") - flow);
-						resArc.getHead().getProps().put("spp.e", (Integer)resArc.get("spp.e") + flow);
+		while (delta >= 1) {
+			// Red-code para concertar os curstos residuais negativos
+			for (Node node : nodes) {
+				for (Arc resArc : node.getResidualArcs()) {
+					if (((Integer) resArc.get("cap") >= delta)
+					    && ((Integer) resArc.get("reducedCost") < 0)) {
+						auxArc = (Arc) resArc.get("arc"); // Ver se não tem que olhar o arco
+						                                  // inverso para passar fluxo
+						                                  // também
+						flow = (Integer) resArc.get("cap");
+						auxArc.getProps().put("flow", (Integer) auxArc.get("flow") + flow);
+						resArc.getTail().getProps()
+						    .put("spp.e", (Integer) resArc.get("spp.e") - flow);
+						resArc.getHead().getProps()
+						    .put("spp.e", (Integer) resArc.get("spp.e") + flow);
 					}
 				}
 			}
 			
 			response = doSSP(delta);
-			if(response.isFeasibleSolution())
+			if (response.isFeasibleSolution())
 				return response;
 			
 			delta /= 2;
@@ -605,21 +612,21 @@ public class Network {
 		return new Response(false);
 	}
 	
-	public void printGraph(){
-		//Imprime o grafo
+	public void printGraph() {
+		// Imprime o grafo
 		System.out.println("Grafo----------------------");
-		for(Node node: nodes){
+		for (Node node : nodes) {
 			System.out.println(node);
-			for(Arc arc: node.getArcs())
+			for (Arc arc : node.getArcs())
 				System.out.println(arc);
 		}
-
+		
 		System.out.println("Grafo Residual ----------------------");
-		for(Node node: nodes){
+		for (Node node : nodes) {
 			System.out.println(node);
-			for(Arc resArc: node.getResidualArcs())
+			for (Arc resArc : node.getResidualArcs())
 				System.out.println(resArc);
-		}	
+		}
 	}
 	
 	public void dump(boolean nodes, boolean arcs, boolean residualArcs) {
@@ -640,4 +647,18 @@ public class Network {
 			}
 		}
 	}
+	
+	public void dispose() {
+		for (Node n : nodes) {
+			for (Arc c : n.getArcs())
+				c.getProps().clear();
+			for (Arc c : n.getResidualArcs())
+				c.getProps().clear();
+			n.getProps().clear();
+			n.getArcs().clear();
+			n.getResidualArcs().clear();
+		}
+		nodes.clear();
+	}
+	
 }
