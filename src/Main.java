@@ -29,9 +29,9 @@ public class Main {
 		
 		timer = System.currentTimeMillis();
 		
-		Response response = newNet.cycleCanceling();
-		//Response response = newNet.sucessiveShortestPath();
-		//Response response = newNet.capacityScaling();
+		Response response = newNet.cycleCanceling(true);
+		// Response response = newNet.sucessiveShortestPath();
+		// Response response = newNet.capacityScaling();
 		if (response.isFeasibleSolution())
 			System.out.println("Custo do fluxo: " + response.getCostFlow());
 		else

@@ -354,31 +354,38 @@ public class Network {
 			return false;
 	}
 	
-	public Response cycleCanceling() {
+	public Response cycleCanceling(boolean edmondsKarp) {
 		
-		Response responseCycleCanceling; // = new ResponseCycleCanceling();
+		final Response responseCycleCanceling = new Response();
 		
 		// Inicializa rede
 		transformDistributionToMaxFlow();
 		createResidualNetwork();
 		calculateLargeNumbers();
 		
-		long timer = System.currentTimeMillis();
+		TimerAndReporter.start();
 		// Resolve o problema Max Flow com o algoritmo Ford-Fulkerson do nó S até o
 		// nó T
-		int maxFlow = edmondsKarp(nodes.get(nodes.size() - 2),
-		    nodes.get(nodes.size() - 1));
-		// int maxFlow = fordFulkerson(nodes.get(nodes.size()-2),
-		// nodes.get(nodes.size()-1));
+		int maxFlow;
+		if (edmondsKarp) {
+			maxFlow = edmondsKarp(nodes.get(nodes.size() - 2),
+			    nodes.get(nodes.size() - 1));
+		} else {
+			maxFlow = fordFulkerson(nodes.get(nodes.size() - 2),
+			    nodes.get(nodes.size() - 1));
+		}
+		responseCycleCanceling.setTimePreparing(TimerAndReporter.elapsed());
+		
 		System.out.println("Fluxo Máximo: " + maxFlow + " calculado em "
-		    + (System.currentTimeMillis() - timer) + "ms.");
+		    + TimerAndReporter.elapsed() + "ms.");
 		
 		// Verifica se o problema tem solução viável
 		if (!flowIsFeasibleToDistribution()) {
-			responseCycleCanceling = new Response(false);
+			responseCycleCanceling.setFeasibleSolution(false);
 			return responseCycleCanceling;
 		}
 		
+		TimerAndReporter.start();
 		Path cycle = BelmanFord.findNegativeCycles(nodes, nodes.size() - 2);
 		System.out.println("Custo do Fluxo inicial: " + calcCostFlow());
 		
@@ -393,10 +400,13 @@ public class Network {
 			if (++loops % 100 == 0)
 				System.out.println();
 		}
+		responseCycleCanceling.setTimeRunning(TimerAndReporter.elapsed());
+		responseCycleCanceling.setLoops(loops);
+		responseCycleCanceling.setCostFlow(calcCostFlow());
+		responseCycleCanceling.setFeasibleSolution(true);
 		
 		System.out.println("###No more cycles;");
 		
-		responseCycleCanceling = new Response(calcCostFlow());
 		return responseCycleCanceling;
 	}
 	
@@ -441,6 +451,10 @@ public class Network {
 	}
 	
 	public Response doSSP(int cut) {
+		final Response res = new Response();
+		
+		TimerAndReporter.start();
+		
 		// Cria uma lista para o conjunto de nós de exesso e outra para o conjunto
 		// de nós de deficit
 		LinkedList<Node> excessNodes = new LinkedList<>();
@@ -457,6 +471,9 @@ public class Network {
 					excessNodes.add(node);
 			}
 		}
+		
+		res.setTimePreparing(TimerAndReporter.elapsed());
+		TimerAndReporter.start();
 		
 		int loops = 0;
 		
@@ -479,8 +496,9 @@ public class Network {
 			
 			// Atualiza os pontenciais
 			for (Node node : nodes) {
-				//if (Math.abs((Integer) node.get("ssp.e")) >= cut)
-					node.set("ssp.p", (Integer) node.get("ssp.p") - (Integer) node.get("djk.dist"));
+				// if (Math.abs((Integer) node.get("ssp.e")) >= cut)
+				node.set("ssp.p",
+				    (Integer) node.get("ssp.p") - (Integer) node.get("djk.dist"));
 			}
 			
 			// Calcula delta
@@ -509,23 +527,30 @@ public class Network {
 				System.out.println();
 		}
 		
-		//Limpa propriedades dos arcos
-		for(Node node : nodes){
+		res.setFeasibleSolution(true);
+		res.setLoops(loops);
+		res.setTimeRunning(TimerAndReporter.elapsed());
+		
+		// Limpa propriedades dos arcos
+		for (Node node : nodes) {
 			node.getProps().remove("djk.parentArc");
 			node.getProps().remove("djk.dist");
 			node.getProps().remove("djk.parent");
 		}
-				
 		
 		// Verifica se a solução é viável
-		for(Node node : nodes){
-			for(Arc arc : node.getArcs()){
-				if((arc.getHead().getId() == -1 || arc.getTail().getId() == -1) && ((Integer)arc.get("flow") > 0))
-					return new Response(false);
+		for (Node node : nodes) {
+			for (Arc arc : node.getArcs()) {
+				if ((arc.getHead().getId() == -1 || arc.getTail().getId() == -1)
+				    && ((Integer) arc.get("flow") > 0)) {
+					res.setFeasibleSolution(false);
+					return res;
+				}
 			}
 		}
-				
-		return new Response(calcCostFlow());
+		
+		res.setCostFlow(calcCostFlow());
+		return res;
 	}
 	
 	public void updateSSP(int cut) {
@@ -546,18 +571,19 @@ public class Network {
 			
 		}
 		
-		//printGraph();
+		// printGraph();
 		
 	}
 	
 	public Response capacityScaling() {
 		int maxEdgeCapacity = 0;
 		int delta, flow;
-		Response response = new Response(false);
+		final Response response = new Response();
 		Arc auxArc;
 		Double deltaDouble;
 		Double log2_10 = Math.log10(2);
 		
+		TimerAndReporter.start();
 		// -------------
 		// Inclui um super nó e arcos deste nó para todos os outros nós e de todos
 		// os nós para ele
@@ -585,8 +611,8 @@ public class Network {
 		for (Node node : nodes) {
 			if (node.getId() == -1)
 				continue;
-			for (Arc arc : node.getArcs()){
-				if(arc.getHead().getId() == -1) 
+			for (Arc arc : node.getArcs()) {
+				if (arc.getHead().getId() == -1)
 					continue;
 				maxEdgeCapacity = Math.max(maxEdgeCapacity, (Integer) arc.get("cap"));
 			}
@@ -597,40 +623,58 @@ public class Network {
 		deltaDouble = Math.pow(2, delta);
 		delta = deltaDouble.intValue();
 		
-		//printGraph();
+		response.setTimePreparing(TimerAndReporter.elapsed());
+		response.setLoops(0);
+		
+		// printGraph();
 		
 		while (delta >= 1) {
 			// Red-code para concertar os curstos residuais negativos
+			TimerAndReporter.start();
 			for (Node node : nodes) {
 				for (Arc resArc : node.getResidualArcs()) {
-					if (((Integer) resArc.get("cap") >= delta) && ((Integer) resArc.get("reducedCost") < 0)) {
+					if (((Integer) resArc.get("cap") >= delta)
+					    && ((Integer) resArc.get("reducedCost") < 0)) {
 						flow = (Integer) resArc.get("cap");
 						
-						//Verifica se tem aresta no grafo com o mesmo sentido, senão coloca fluxo na aresta inversa
-						if(resArc.getProps().containsKey("arc")){
+						// Verifica se tem aresta no grafo com o mesmo sentido, senão coloca
+						// fluxo na aresta inversa
+						if (resArc.getProps().containsKey("arc")) {
 							auxArc = (Arc) resArc.get("arc");
-							auxArc.getProps().put("flow", (Integer) auxArc.get("flow") + flow);
-						}else{
+							auxArc.getProps()
+							    .put("flow", (Integer) auxArc.get("flow") + flow);
+						} else {
 							auxArc = (Arc) resArc.get("arcInv");
-							auxArc.getProps().put("flow", (Integer) auxArc.get("flow") - flow);
+							auxArc.getProps()
+							    .put("flow", (Integer) auxArc.get("flow") - flow);
 						}
 						
-						resArc.getTail().getProps().put("ssp.e", (Integer) resArc.getTail().get("ssp.e") - flow);
-						resArc.getHead().getProps().put("ssp.e", (Integer) resArc.getHead().get("ssp.e") + flow);
+						resArc.getTail().getProps()
+						    .put("ssp.e", (Integer) resArc.getTail().get("ssp.e") - flow);
+						resArc.getHead().getProps()
+						    .put("ssp.e", (Integer) resArc.getHead().get("ssp.e") + flow);
 					}
 				}
 			}
 			
 			calculateResidualCapacities();
-			//printGraph();
+			// printGraph();
+			response.addTimeRunning(TimerAndReporter.elapsed());
 			
-			response = doSSP(delta);
+			Response subRes = doSSP(delta);
+			System.out.println("/");
 			
-			//printGraph();
+			response.addTimePreparing(subRes.getTimePreparing());
+			response.addTimeRunning(subRes.getTimeRunning());
+			response.addLoops(subRes.getLoops());
+			response.setCostFlow(subRes.getCostFlow());
+			
+			// printGraph();
 			
 			delta /= 2;
 		}
-
+		
+		response.setFeasibleSolution(true);
 		return response;
 		
 	}

@@ -1,23 +1,52 @@
 public final class Response {
 	private long costFlow;
 	private boolean feasibleSolution;
-	private long time;
+	private long timePreparing;
+	private long timeRunning;
+	private int loops;
 	
-	public long getTime() {
-		return time;
+	public int getLoops() {
+		return loops;
 	}
 	
-	public void setTime(long time) {
-		this.time = time;
+	public void setLoops(int loops) {
+		this.loops = loops;
 	}
 	
-	public Response(long _costFlow) {
-		this.costFlow = _costFlow;
-		this.feasibleSolution = true;
+	public void addLoops(int loops) {
+		this.loops += loops;
 	}
 	
-	public Response(boolean _feasibleSolution) {
-		this.feasibleSolution = _feasibleSolution;
+	public long getTimePreparing() {
+		return timePreparing;
+	}
+	
+	public void setTimePreparing(long time) {
+		this.timePreparing = time;
+	}
+	
+	public void addTimePreparing(long time) {
+		this.timePreparing += time;
+	}
+	
+	public long getTimeRunning() {
+		return timeRunning;
+	}
+	
+	public void setTimeRunning(long timeRunning) {
+		this.timeRunning = timeRunning;
+	}
+	
+	public void addTimeRunning(long timeRunning) {
+		this.timeRunning += timeRunning;
+	}
+	
+	public void setCostFlow(long costFlow) {
+		this.costFlow = costFlow;
+	}
+	
+	public void setFeasibleSolution(boolean feasibleSolution) {
+		this.feasibleSolution = feasibleSolution;
 	}
 	
 	public boolean isFeasibleSolution() {
