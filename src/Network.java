@@ -7,7 +7,7 @@ import java.util.LinkedList;
 
 public class Network {
 	
-	private int largeCapacity = Integer.MAX_VALUE / 2;
+	private int largeCapacity = Integer.MAX_VALUE / 10;
 	private int largeCost = Integer.MAX_VALUE / 1000;
 	
 	private ArrayList<Node> nodes = new ArrayList<Node>();
@@ -400,8 +400,8 @@ public class Network {
 		return responseCycleCanceling;
 	}
 	
-	public int calcCostFlow() {
-		int costFlow = 0;
+	public long calcCostFlow() {
+		long costFlow = 0;
 		
 		for (Node node : nodes)
 			for (Arc arc : node.getArcs()) {

@@ -1,5 +1,5 @@
 public final class Response {
-	private int costFlow;
+	private long costFlow;
 	private boolean feasibleSolution;
 	private long time;
 	
@@ -11,7 +11,7 @@ public final class Response {
 		this.time = time;
 	}
 	
-	public Response(int _costFlow) {
+	public Response(long _costFlow) {
 		this.costFlow = _costFlow;
 		this.feasibleSolution = true;
 	}
@@ -24,7 +24,7 @@ public final class Response {
 		return feasibleSolution;
 	}
 	
-	public int getCostFlow() {
+	public long getCostFlow() {
 		return costFlow;
 	}
 	
