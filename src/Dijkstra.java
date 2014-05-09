@@ -45,7 +45,7 @@ public class Dijkstra {
 			}
 			
 			for (Arc arc : u.getResidualArcs()) {
-				if ((Integer) arc.get("cap") <= cut)
+				if ((Integer) arc.get("cap") < cut)
 					continue;
 				
 				if ((Integer) arc.get(DJK_ARC_COST) < 0) {
