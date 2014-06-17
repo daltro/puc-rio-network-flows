@@ -19,13 +19,13 @@ public class Main {
 	private static final void playWithFile(File file) throws IOException {
 		Network newNet = new Network();
 		
-		System.out.print("Arquivo " + file.getName() + " carregando... ");
+		System.out.println("Arquivo " + file.getName() + " carregando... ");
 		long timer = System.currentTimeMillis();
 		
 		newNet.loadFromFile(file);
 		
 		ContractAlg contract = new ContractAlg();
-		contract.doContract(newNet);
+		System.out.println("Corte mínimo: " + contract.doContract(newNet));
 		
 /*		Arc arc = newNet.getNodes().get(1).getHashArc(1);
 		newNet.contractEdge(arc);

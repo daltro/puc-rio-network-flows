@@ -99,10 +99,15 @@ public class Network {
 					
 					Arc newArcHead = new Arc(nodes.get(Integer.parseInt(split[1]) - 1),
 											 nodes.get(Integer.parseInt(split[2]) - 1));
-					
-					newArc.set("qtd", 1);
-					newArcHead.set("qtd", 1);
-					
+										
+					if(newArc.getTail().getHashArcs().containsKey(newArc.getHead().getId())){
+						newArc.set("qtd", 2);
+						newArcHead.set("qtd", 2);
+					}else{
+						newArc.set("qtd", 1);
+						newArcHead.set("qtd", 1);	
+					}
+
 					newArc.getTail().setHashArc(newArc.getHead().getId(), newArc);
 					newArc.getHead().setHashArc(newArc.getTail().getId(), newArcHead);
 					
@@ -733,19 +738,19 @@ public class Network {
 		Node head = arc.getHead();
 		
 		//Marca o nó da cabeça com removido
-		arc.getHead().deleteNode();
+		head.deleteNode();
 		
-		//Atualiza o grau do nó
+		//Atualiza o grau do tail
 		int nArcs = (int)arc.get("qtd");
 		tail.incDegree(-nArcs);
 		
 		//Atualiza a quantidade de arcos do grafo
-		qtdArcs -= nArcs; 
+		qtdArcs -= 2 * nArcs; 
 
 		//Apaga a aresta do Tail para o Head
 		tail.deleteHashArc(head.getId()); 
 		
-		for(int neighbor : arc.getHead().getHashArcs().keySet()){
+		for(int neighbor : head.getHashArcs().keySet()){
 			if(neighbor != tail.getId()){ //Exclui o próprio nó para não criar arcos de laço
 				//Verifica se já existe um arco entre os nós
 				if(tail.getHashArcs().containsKey(neighbor)){
@@ -762,8 +767,7 @@ public class Network {
 					nodes.get(neighbor - 1).deleteHashArc(head.getId());
 					
 					//Atualiza o grau dos nós
-					tail.setDegree(qtdTail + qtdHead);
-					nodes.get(neighbor - 1).setDegree(qtdTail + qtdHead);
+					tail.incDegree(qtdHead); //Acrescenta os arcos dos vizinhos do Head para o Tail
 				}else{
 					int qtdHead = (int)head.getHashArcs().get(neighbor).get("qtd");
 					
@@ -781,8 +785,7 @@ public class Network {
 					nodes.get(neighbor - 1).deleteHashArc(head.getId());
 					
 					//Atualiza o grau dos nós
-					tail.setDegree(qtdHead);
-					nodes.get(neighbor - 1).setDegree(qtdHead);
+					tail.incDegree(qtdHead); //Acrescenta os arcos dos vizinhos do Head para o Tail
 				}
 			}
 		}	
@@ -793,20 +796,23 @@ public class Network {
 		
 		net.qtdArcs = qtdArcs;
 		
-		// Cria todos os nós no ArrayList	
+		// Cria todos os nós sem arcos no ArrayList	
 		for(Node node : nodes){
 			Node newNode = new Node(node.getId());
-			newNode.setDegree(node.getDegree());
-			
+			newNode.setDegree(node.getDegree());			
+			net.getNodes().add(newNode);
+		}
+		
+		
+		// Cria os arcos dos nós	
+		for(Node node : nodes){		
 			//Adiciona os HashArcs
 			for(int neighbor : node.getHashArcs().keySet()){
 				Arc arc = node.getHashArc(neighbor);
-				Arc newArc = new Arc(arc.getHead(), arc.getTail());
+				Arc newArc = new Arc(net.getNodes().get(arc.getHead().getId()-1), net.getNodes().get(arc.getTail().getId()-1));
 				newArc.set("qtd", (int)arc.get("qtd"));
-				newNode.setHashArc(neighbor, newArc);
-			}
-			
-			net.getNodes().add(newNode);
+				net.getNodes().get(node.getId()-1).setHashArc(neighbor, newArc);
+			}			
 		}
 		
 		return net;
