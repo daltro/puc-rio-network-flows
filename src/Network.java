@@ -9,9 +9,10 @@ public class Network {
 	
 	private int largeCapacity = Integer.MAX_VALUE / 10;
 	private int largeCost = Integer.MAX_VALUE / 1000;
+	public int qtdArcs = 0;
 	
 	private ArrayList<Node> nodes = new ArrayList<Node>();
-	
+		
 	public void calculateResidualCapacities() {
 		Arc auxResArc;
 		
@@ -69,6 +70,7 @@ public class Network {
 					String split[] = line.split("\\s+");
 					// nodes = new Node[Integer.parseInt(split[2])];
 					qtdNodes = Integer.parseInt(split[2]);
+					qtdArcs = 2 * Integer.parseInt(split[3]);
 					
 					// Cria todos os nós vazios no ArrayList
 					for (int i = 0; i < qtdNodes; i++) {
@@ -95,21 +97,18 @@ public class Network {
 					Arc newArc = new Arc(nodes.get(Integer.parseInt(split[2]) - 1),
 					    nodes.get(Integer.parseInt(split[1]) - 1));
 					
-					newArc.getTail().getArcs().add(newArc);
+					Arc newArcHead = new Arc(nodes.get(Integer.parseInt(split[1]) - 1),
+											 nodes.get(Integer.parseInt(split[2]) - 1));
 					
-					newArc.set("low", Integer.parseInt(split[3]));
-					newArc.set("cap", Integer.parseInt(split[4]));
-					newArc.set("cost", Integer.parseInt(split[5]));
+					newArc.set("qtd", 1);
+					newArcHead.set("qtd", 1);
 					
-					if (Integer.parseInt(split[3]) > 0) {
-						System.err.println("Grafo tem lower bound!!");
-						System.exit(1);
-					}
+					newArc.getTail().setHashArc(newArc.getHead().getId(), newArc);
+					newArc.getHead().setHashArc(newArc.getTail().getId(), newArcHead);
 					
-					if (split.length == 7)
-						newArc.set("flow", Integer.parseInt(split[6]));
-					else
-						newArc.set("flow", 0);
+					newArc.getHead().incDegree(1);
+					newArc.getTail().incDegree(1);
+
 				}
 				
 			}
@@ -727,5 +726,91 @@ public class Network {
 		}
 		nodes.clear();
 	}
+	
+	
+	public void contractEdge(Arc arc){
+		Node tail = arc.getTail();
+		Node head = arc.getHead();
+		
+		//Marca o nó da cabeça com removido
+		arc.getHead().deleteNode();
+		
+		//Atualiza o grau do nó
+		int nArcs = (int)arc.get("qtd");
+		tail.incDegree(-nArcs);
+		
+		//Atualiza a quantidade de arcos do grafo
+		qtdArcs -= nArcs; 
+
+		//Apaga a aresta do Tail para o Head
+		tail.deleteHashArc(head.getId()); 
+		
+		for(int neighbor : arc.getHead().getHashArcs().keySet()){
+			if(neighbor != tail.getId()){ //Exclui o próprio nó para não criar arcos de laço
+				//Verifica se já existe um arco entre os nós
+				if(tail.getHashArcs().containsKey(neighbor)){
+					int qtdTail = (int)tail.getHashArcs().get(neighbor).get("qtd");
+					int qtdHead = (int)head.getHashArcs().get(neighbor).get("qtd");
+					
+					//Adiciona os vizinhos do Head no Tail
+					tail.getHashArcs().get(neighbor).set("qtd", qtdTail + qtdHead);
+					
+					//Nos vizinhos do Head, troca as arestas que vão para o Head por arestas para o Tail
+					nodes.get(neighbor - 1).getHashArc(tail.getId()).set("qtd", qtdTail + qtdHead);
+					
+					//Apaga aresta do vizinho do Head para o Head
+					nodes.get(neighbor - 1).deleteHashArc(head.getId());
+					
+					//Atualiza o grau dos nós
+					tail.setDegree(qtdTail + qtdHead);
+					nodes.get(neighbor - 1).setDegree(qtdTail + qtdHead);
+				}else{
+					int qtdHead = (int)head.getHashArcs().get(neighbor).get("qtd");
+					
+					//Cria arco do Tail para o vizinho do Head
+					Arc newArcTail = new Arc(nodes.get(neighbor - 1), nodes.get(tail.getId() - 1));
+					newArcTail.set("qtd", qtdHead);
+					tail.setHashArc(neighbor, newArcTail);
+					
+					//Cria arco do vizinho do Head para o Tail
+					Arc newArcNeighbor = new Arc(nodes.get(tail.getId() - 1), nodes.get(neighbor - 1));
+					newArcNeighbor.set("qtd", qtdHead);
+					nodes.get(neighbor - 1).setHashArc(tail.getId(), newArcNeighbor);
+					
+					//Apaga aresta do vizinho do Head para o Head
+					nodes.get(neighbor - 1).deleteHashArc(head.getId());
+					
+					//Atualiza o grau dos nós
+					tail.setDegree(qtdHead);
+					nodes.get(neighbor - 1).setDegree(qtdHead);
+				}
+			}
+		}	
+	}
+	
+	public Network clone(){
+		Network net = new Network();
+		
+		net.qtdArcs = qtdArcs;
+		
+		// Cria todos os nós no ArrayList	
+		for(Node node : nodes){
+			Node newNode = new Node(node.getId());
+			newNode.setDegree(node.getDegree());
+			
+			//Adiciona os HashArcs
+			for(int neighbor : node.getHashArcs().keySet()){
+				Arc arc = node.getHashArc(neighbor);
+				Arc newArc = new Arc(arc.getHead(), arc.getTail());
+				newArc.set("qtd", (int)arc.get("qtd"));
+				newNode.setHashArc(neighbor, newArc);
+			}
+			
+			net.getNodes().add(newNode);
+		}
+		
+		return net;
+	}
+	
 	
 }

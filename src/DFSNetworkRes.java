@@ -71,9 +71,9 @@ public class DFSNetworkRes {
 		node.set(DFS_V, VALUE);
 	}
 	
-	private static final Node getParent(Node node){
-		return (Node)node.get(DFS_P);
-	}
+//	private static final Node getParent(Node node){
+//		return (Node)node.get(DFS_P);
+//	}
 	
 	private static final void setParent(Node node, Node parent){
 		node.set(DFS_P, parent);
