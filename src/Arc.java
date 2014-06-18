@@ -4,13 +4,22 @@ import java.util.Map;
 public final class Arc {
 	private final Node head;
 	private final Node tail;
+	public int qtd;
 	
-	private final HashMap<String, Object> props = new HashMap<>(4);
+	private final HashMap<String, Object> props;
 	
 	public Arc(Node head, Node tail) {
 		super();
 		this.head = head;
 		this.tail = tail;
+		props = new HashMap<>(4);
+	}
+	
+	public Arc(Node head, Node tail, int initPropsSize) {
+		super();
+		this.head = head;
+		this.tail = tail;
+		props = new HashMap<>(initPropsSize*2);
 	}
 	
 	public HashMap<String, Object> getProps() {
@@ -47,8 +56,7 @@ public final class Arc {
 			if (e.getValue() instanceof Node) {
 				res += "Node(" + ((Node) e.getValue()).getId() + ")";
 			} else if (e.getValue() instanceof Arc) {
-				res += "Arc(" + ((Arc) e.getValue()).getTail().getId() + "->"
-				    + ((Arc) e.getValue()).getHead().getId() + ")";
+				res += "Arc(" + ((Arc) e.getValue()).getTail().getId() + "->" + ((Arc) e.getValue()).getHead().getId() + ")";
 			} else {
 				res += e.getValue();
 			}

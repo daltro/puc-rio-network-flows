@@ -1,18 +1,58 @@
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.Map;
 
 public class Network {
 	
 	private int largeCapacity = Integer.MAX_VALUE / 10;
 	private int largeCost = Integer.MAX_VALUE / 1000;
 	public int qtdArcs = 0;
+	public int qtdNodes = 0;
 	
-	private ArrayList<Node> nodes = new ArrayList<Node>();
+	public static long clonningTime = 0;
+	
+	private final ArrayList<Node> nodes;
+	
+	public Network() {
+		nodes = new ArrayList<Node>();
+	}
+	
+	public Network(Network toClone) {
+		long timer = System.nanoTime();
 		
+		nodes = new ArrayList<Node>(toClone.nodes.size());
+		qtdArcs = toClone.qtdArcs;
+		qtdNodes = toClone.qtdNodes;
+		
+		for (Node nodeToClone : toClone.getNodes()){
+			if (nodeToClone!=null && !nodeToClone.hasDeleted())
+				nodes.add(new Node(nodeToClone));
+			else
+				nodes.add(null);
+		}
+		
+		for (int i = 0; i < nodes.size(); i += 1) {
+			Node original = toClone.nodes.get(i);
+			if (original == null || original.hasDeleted())
+				continue;
+			Node clone = nodes.get(i);
+			for (Map.Entry<Integer, Arc> a : original.getHashArcs().entrySet()) {
+				if (a.getValue().getHead().hasDeleted())
+					continue;
+				Arc cloneArc = new Arc(nodes.get(a.getValue().getHead().getId() - 1), nodes.get(a.getValue().getTail().getId() - 1), a.getValue().getProps().size());
+				cloneArc.qtd = a.getValue().qtd;
+				clone.getHashArcs().put(a.getKey(), cloneArc);
+			}
+		}
+		clonningTime += (System.nanoTime() - timer);
+	}
+	
 	public void calculateResidualCapacities() {
 		Arc auxResArc;
 		
@@ -20,8 +60,7 @@ public class Network {
 			
 			for (Arc arc : node.getArcs()) {
 				auxResArc = (Arc) arc.get("res.arc");
-				auxResArc.set("cap",
-				    (Integer) arc.get("cap") - (Integer) arc.get("flow"));
+				auxResArc.set("cap", (Integer) arc.get("cap") - (Integer) arc.get("flow"));
 				
 				auxResArc = (Arc) arc.get("res.arcInv");
 				auxResArc.set("cap", arc.get("flow"));
@@ -46,8 +85,7 @@ public class Network {
 		largeCapacity = largeCost * 2;
 		
 		if ((largeCost <= 0) || (largeCapacity <= 0))
-			throw new IllegalStateException(
-			    "Valores para largeCost e largeCapacity negativo.");
+			throw new IllegalStateException("Valores para largeCost e largeCapacity negativo.");
 		
 	}
 	
@@ -58,13 +96,11 @@ public class Network {
 			@SuppressWarnings("resource")
 			BufferedReader in = new BufferedReader(fin);
 			
-			int qtdNodes = 0;
-			
 			String line;
 			while ((line = in.readLine()) != null) {
 				if (line.startsWith("c "))
 					continue; // comentário
-					
+				
 				if (line.startsWith("p min ")) {
 					// p min <nodes> <arcs>: definicão do problema
 					String split[] = line.split("\\s+");
@@ -85,8 +121,7 @@ public class Network {
 					// Definição de um nó
 					// n <id> <flow>
 					String split[] = line.split("\\s+");
-					nodes.get(Integer.parseInt(split[1]) - 1).set("flow",
-					    Integer.parseInt(split[2]));
+					nodes.get(Integer.parseInt(split[1]) - 1).set("flow", Integer.parseInt(split[2]));
 				}
 				
 				else if (line.startsWith("a ")) {
@@ -94,26 +129,24 @@ public class Network {
 					// Definição de uma aresta
 					// a <v> <w> <low> <cap> <cost>
 					String split[] = line.split("\\s+");
-					Arc newArc = new Arc(nodes.get(Integer.parseInt(split[2]) - 1),
-					    nodes.get(Integer.parseInt(split[1]) - 1));
+					Arc newArc = new Arc(nodes.get(Integer.parseInt(split[2]) - 1), nodes.get(Integer.parseInt(split[1]) - 1));
 					
-					Arc newArcHead = new Arc(nodes.get(Integer.parseInt(split[1]) - 1),
-											 nodes.get(Integer.parseInt(split[2]) - 1));
-										
-					if(newArc.getTail().getHashArcs().containsKey(newArc.getHead().getId())){
-						newArc.set("qtd", 2);
-						newArcHead.set("qtd", 2);
-					}else{
-						newArc.set("qtd", 1);
-						newArcHead.set("qtd", 1);	
+					Arc newArcHead = new Arc(nodes.get(Integer.parseInt(split[1]) - 1), nodes.get(Integer.parseInt(split[2]) - 1));
+					
+					if (newArc.getTail().getHashArcs().containsKey(newArc.getHead().getId())) {
+						newArc.qtd = 2;
+						newArcHead.qtd = 2;
+					} else {
+						newArc.qtd = 1;
+						newArcHead.qtd = 1;
 					}
-
+					
 					newArc.getTail().setHashArc(newArc.getHead().getId(), newArc);
 					newArc.getHead().setHashArc(newArc.getTail().getId(), newArcHead);
 					
 					newArc.getHead().incDegree(1);
 					newArc.getTail().incDegree(1);
-
+					
 				}
 				
 			}
@@ -227,9 +260,9 @@ public class Network {
 		
 		while (resPath.size() > 0) {
 			updateFlow(resPath, resPath.getBottleneck()); // Aumenta o fluxo no
-			                                              // caminho aumentante
+			// caminho aumentante
 			calculateResidualCapacities(); // Atualiza a rede residual com o novo
-			                               // fluxo
+			// fluxo
 			resPath = findPathResidual(s, t, 1); // Encontra um caminho aumentante
 			clearNetworkDFS(); // Limpa as marcações da DFS
 		}
@@ -244,23 +277,22 @@ public class Network {
 		int valueMaxFlow = 0;
 		
 		Path resPath = findPathResidualBFS(s, t, 1); // Encontra um caminho
-		                                             // aumentante
+		// aumentante
 		
 		int count = 0;
 		long timer;
 		long time = 0;
 		while (resPath.size() > 0) {
 			updateFlow(resPath, resPath.getBottleneck()); // Aumenta o fluxo no
-			                                              // caminho aumentante
+			// caminho aumentante
 			calculateResidualCapacities(); // Atualiza a rede residual com o novo
-			                               // fluxo
+			// fluxo
 			timer = System.currentTimeMillis();
 			resPath = findPathResidualBFS(s, t, 1); // Encontra um caminho aumentante
 			time += System.currentTimeMillis() - timer;
 			count += 1;
 			if (count >= 1000) {
-				System.out.println("Tempo médio de findPathResidual: " + (time / 1000)
-				    + "ms.");
+				System.out.println("Tempo médio de findPathResidual: " + (time / 1000) + "ms.");
 				count = 0;
 				time = 0;
 			}
@@ -349,13 +381,12 @@ public class Network {
 		
 		// Computa a soma dos fluxos positivos
 		for (Node node : nodes)
-			flowNodes += (Integer) node.get("flow") > 0 ? (Integer) node.get("flow")
-			    : 0;
-		
-		if (flow == flowNodes)
-			return true;
-		else
-			return false;
+			flowNodes += (Integer) node.get("flow") > 0 ? (Integer) node.get("flow") : 0;
+			
+			if (flow == flowNodes)
+				return true;
+			else
+				return false;
 	}
 	
 	public Response cycleCanceling(boolean edmondsKarp) {
@@ -372,16 +403,13 @@ public class Network {
 		// nó T
 		int maxFlow;
 		if (edmondsKarp) {
-			maxFlow = edmondsKarp(nodes.get(nodes.size() - 2),
-			    nodes.get(nodes.size() - 1));
+			maxFlow = edmondsKarp(nodes.get(nodes.size() - 2), nodes.get(nodes.size() - 1));
 		} else {
-			maxFlow = fordFulkerson(nodes.get(nodes.size() - 2),
-			    nodes.get(nodes.size() - 1));
+			maxFlow = fordFulkerson(nodes.get(nodes.size() - 2), nodes.get(nodes.size() - 1));
 		}
 		responseCycleCanceling.setTimePreparing(TimerAndReporter.elapsed());
 		
-		System.out.println("Fluxo Máximo: " + maxFlow + " calculado em "
-		    + TimerAndReporter.elapsed() + "ms.");
+		System.out.println("Fluxo Máximo: " + maxFlow + " calculado em " + TimerAndReporter.elapsed() + "ms.");
 		
 		// Verifica se o problema tem solução viável
 		if (!flowIsFeasibleToDistribution()) {
@@ -501,8 +529,7 @@ public class Network {
 			// Atualiza os pontenciais
 			for (Node node : nodes) {
 				// if (Math.abs((Integer) node.get("ssp.e")) >= cut)
-				node.set("ssp.p",
-				    (Integer) node.get("ssp.p") - (Integer) node.get("djk.dist"));
+				node.set("ssp.p", (Integer) node.get("ssp.p") - (Integer) node.get("djk.dist"));
 			}
 			
 			// Calcula delta
@@ -545,8 +572,7 @@ public class Network {
 		// Verifica se a solução é viável
 		for (Node node : nodes) {
 			for (Arc arc : node.getArcs()) {
-				if ((arc.getHead().getId() == -1 || arc.getTail().getId() == -1)
-				    && ((Integer) arc.get("flow") > 0)) {
+				if ((arc.getHead().getId() == -1 || arc.getTail().getId() == -1) && ((Integer) arc.get("flow") > 0)) {
 					res.setFeasibleSolution(false);
 					return res;
 				}
@@ -568,9 +594,7 @@ public class Network {
 				// if((Integer)resArc.get("cap") < cut)
 				// continue;
 				
-				resArc.set("reducedCost", (Integer) resArc.get("cost")
-				    - (Integer) resArc.getTail().get("ssp.p")
-				    + (Integer) resArc.getHead().get("ssp.p"));
+				resArc.set("reducedCost", (Integer) resArc.get("cost") - (Integer) resArc.getTail().get("ssp.p") + (Integer) resArc.getHead().get("ssp.p"));
 			}
 			
 		}
@@ -637,26 +661,21 @@ public class Network {
 			TimerAndReporter.start();
 			for (Node node : nodes) {
 				for (Arc resArc : node.getResidualArcs()) {
-					if (((Integer) resArc.get("cap") >= delta)
-					    && ((Integer) resArc.get("reducedCost") < 0)) {
+					if (((Integer) resArc.get("cap") >= delta) && ((Integer) resArc.get("reducedCost") < 0)) {
 						flow = (Integer) resArc.get("cap");
 						
 						// Verifica se tem aresta no grafo com o mesmo sentido, senão coloca
 						// fluxo na aresta inversa
 						if (resArc.getProps().containsKey("arc")) {
 							auxArc = (Arc) resArc.get("arc");
-							auxArc.getProps()
-							    .put("flow", (Integer) auxArc.get("flow") + flow);
+							auxArc.getProps().put("flow", (Integer) auxArc.get("flow") + flow);
 						} else {
 							auxArc = (Arc) resArc.get("arcInv");
-							auxArc.getProps()
-							    .put("flow", (Integer) auxArc.get("flow") - flow);
+							auxArc.getProps().put("flow", (Integer) auxArc.get("flow") - flow);
 						}
 						
-						resArc.getTail().getProps()
-						    .put("ssp.e", (Integer) resArc.getTail().get("ssp.e") - flow);
-						resArc.getHead().getProps()
-						    .put("ssp.e", (Integer) resArc.getHead().get("ssp.e") + flow);
+						resArc.getTail().getProps().put("ssp.e", (Integer) resArc.getTail().get("ssp.e") - flow);
+						resArc.getHead().getProps().put("ssp.e", (Integer) resArc.getHead().get("ssp.e") + flow);
 					}
 				}
 			}
@@ -701,8 +720,7 @@ public class Network {
 	}
 	
 	public void dump(boolean nodes, boolean arcs, boolean residualArcs) {
-		System.out.println("Dump do grafo nodes=" + nodes + ", arcs=" + arcs
-		    + ", residual=" + residualArcs);
+		System.out.println("Dump do grafo nodes=" + nodes + ", arcs=" + arcs + ", residual=" + residualArcs);
 		System.out.println("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=");
 		for (Node n : this.nodes) {
 			if (nodes) {
@@ -732,91 +750,124 @@ public class Network {
 		nodes.clear();
 	}
 	
-	
-	public void contractEdge(Arc arc){
+	public void contractEdge(Arc arc) {
 		Node tail = arc.getTail();
 		Node head = arc.getHead();
 		
-		//Marca o nó da cabeça com removido
+		// Marca o nó da cabeça com removido
 		head.deleteNode();
 		
-		//Atualiza o grau do tail
-		int nArcs = (int)arc.get("qtd");
+		// Atualiza o grau do tail
+		int nArcs = arc.qtd;
 		tail.incDegree(-nArcs);
 		
-		//Atualiza a quantidade de arcos do grafo
-		qtdArcs -= 2 * nArcs; 
-
-		//Apaga a aresta do Tail para o Head
-		tail.deleteHashArc(head.getId()); 
+		// Atualiza a quantidade de arcos do grafo
+		qtdArcs -= 2 * nArcs;
 		
-		for(int neighbor : head.getHashArcs().keySet()){
-			if(neighbor != tail.getId()){ //Exclui o próprio nó para não criar arcos de laço
-				//Verifica se já existe um arco entre os nós
-				if(tail.getHashArcs().containsKey(neighbor)){
-					int qtdTail = (int)tail.getHashArcs().get(neighbor).get("qtd");
-					int qtdHead = (int)head.getHashArcs().get(neighbor).get("qtd");
+		// Atualiza a quantidade de nós efetivos
+		qtdNodes -= 1;
+		
+		// Apaga a aresta do Tail para o Head
+		tail.deleteHashArc(head.getId());
+		
+		for (Map.Entry<Integer, Arc> neighbor : head.getHashArcs().entrySet()) {
+			if (neighbor.getKey() != tail.getId()) { // Exclui o próprio nó para não
+				// criar
+				// arcos de laço
+				// Verifica se já existe um arco entre os nós
+				if (tail.getHashArcs().containsKey(neighbor.getKey())) {
+					int qtdTail = tail.getHashArcs().get(neighbor.getKey()).qtd;
+					int qtdHead = neighbor.getValue().qtd;
 					
-					//Adiciona os vizinhos do Head no Tail
-					tail.getHashArcs().get(neighbor).set("qtd", qtdTail + qtdHead);
+					// Adiciona os vizinhos do Head no Tail
+					tail.getHashArcs().get(neighbor.getKey()).qtd = qtdTail + qtdHead;
 					
-					//Nos vizinhos do Head, troca as arestas que vão para o Head por arestas para o Tail
-					nodes.get(neighbor - 1).getHashArc(tail.getId()).set("qtd", qtdTail + qtdHead);
+					// Nos vizinhos do Head, troca as arestas que vão para o Head por
+					// arestas para o Tail
+					nodes.get(neighbor.getKey() - 1).getHashArc(tail.getId()).qtd = qtdTail + qtdHead;
 					
-					//Apaga aresta do vizinho do Head para o Head
-					nodes.get(neighbor - 1).deleteHashArc(head.getId());
+					// Apaga aresta do vizinho do Head para o Head
+					nodes.get(neighbor.getKey() - 1).deleteHashArc(head.getId());
 					
-					//Atualiza o grau dos nós
-					tail.incDegree(qtdHead); //Acrescenta os arcos dos vizinhos do Head para o Tail
-				}else{
-					int qtdHead = (int)head.getHashArcs().get(neighbor).get("qtd");
+					// Atualiza o grau dos nós
+					tail.incDegree(qtdHead); // Acrescenta os arcos dos vizinhos do Head
+					// para o Tail
+				} else {
+					int qtdHead = neighbor.getValue().qtd;
 					
-					//Cria arco do Tail para o vizinho do Head
-					Arc newArcTail = new Arc(nodes.get(neighbor - 1), nodes.get(tail.getId() - 1));
-					newArcTail.set("qtd", qtdHead);
-					tail.setHashArc(neighbor, newArcTail);
+					// Cria arco do Tail para o vizinho do Head
+					Arc newArcTail = new Arc(nodes.get(neighbor.getKey() - 1), nodes.get(tail.getId() - 1));
+					newArcTail.qtd = qtdHead;
+					tail.setHashArc(neighbor.getKey(), newArcTail);
 					
-					//Cria arco do vizinho do Head para o Tail
-					Arc newArcNeighbor = new Arc(nodes.get(tail.getId() - 1), nodes.get(neighbor - 1));
-					newArcNeighbor.set("qtd", qtdHead);
-					nodes.get(neighbor - 1).setHashArc(tail.getId(), newArcNeighbor);
+					// Cria arco do vizinho do Head para o Tail
+					Arc newArcNeighbor = new Arc(nodes.get(tail.getId() - 1), nodes.get(neighbor.getKey() - 1));
+					newArcNeighbor.qtd = qtdHead;
+					nodes.get(neighbor.getKey() - 1).setHashArc(tail.getId(), newArcNeighbor);
 					
-					//Apaga aresta do vizinho do Head para o Head
-					nodes.get(neighbor - 1).deleteHashArc(head.getId());
+					// Apaga aresta do vizinho do Head para o Head
+					nodes.get(neighbor.getKey() - 1).deleteHashArc(head.getId());
 					
-					//Atualiza o grau dos nós
-					tail.incDegree(qtdHead); //Acrescenta os arcos dos vizinhos do Head para o Tail
+					// Atualiza o grau dos nós
+					tail.incDegree(qtdHead); // Acrescenta os arcos dos vizinhos do Head
+					// para o Tail
 				}
 			}
-		}	
+		}
 	}
 	
-	public Network clone(){
-		Network net = new Network();
+	@Override
+	public Network clone() {
 		
-		net.qtdArcs = qtdArcs;
+		return new Network(this);
 		
-		// Cria todos os nós sem arcos no ArrayList	
-		for(Node node : nodes){
-			Node newNode = new Node(node.getId());
-			newNode.setDegree(node.getDegree());			
-			net.getNodes().add(newNode);
-		}
-		
-		
-		// Cria os arcos dos nós	
-		for(Node node : nodes){		
-			//Adiciona os HashArcs
-			for(int neighbor : node.getHashArcs().keySet()){
-				Arc arc = node.getHashArc(neighbor);
-				Arc newArc = new Arc(net.getNodes().get(arc.getHead().getId()-1), net.getNodes().get(arc.getTail().getId()-1));
-				newArc.set("qtd", (int)arc.get("qtd"));
-				net.getNodes().get(node.getId()-1).setHashArc(neighbor, newArc);
-			}			
-		}
-		
-		return net;
+		// Network net = new Network();
+		//
+		// net.qtdArcs = qtdArcs;
+		//
+		// // Cria todos os nós sem arcos no ArrayList
+		// for (Node node : nodes) {
+		// Node newNode = new Node(node.getId());
+		// newNode.setDegree(node.getDegree());
+		// net.getNodes().add(newNode);
+		// }
+		//
+		// // Cria os arcos dos nós
+		// for (Node node : nodes) {
+		// // Adiciona os HashArcs
+		// for (int neighbor : node.getHashArcs().keySet()) {
+		// Arc arc = node.getHashArc(neighbor);
+		// Arc newArc = new Arc(net.getNodes().get(arc.getHead().getId() - 1),
+		// net.getNodes().get(arc.getTail().getId() - 1));
+		// newArc.set("qtd", (int) arc.get("qtd"));
+		// net.getNodes().get(node.getId() - 1).setHashArc(neighbor, newArc);
+		// }
+		// }
+		//
+		// return net;
 	}
 	
+	public void makeDotFile(File f) throws FileNotFoundException {
+		PrintWriter out = new PrintWriter(new File(f.getAbsolutePath() + ".out"));
+		
+		out.println("Graph G{");
+		out.println("overlap=scale;");
+		out.println("splines=true;");
+		out.println("node[label=\"\",chape=circle,width=0.1,height=0.1]");
+		
+		for (Node n : getNodes()) {
+			for (Arc a : n.getHashArcs().values()) {
+				if (a.getHead().getId() > a.getTail().getId()) {
+					out.println("n" + a.getHead().getId() + " -- n" + a.getTail().getId() + ";");
+				}
+			}
+		}
+		
+		out.println("}");
+		
+		out.flush();
+		out.close();
+		
+	}
 	
 }
