@@ -8,37 +8,50 @@ public class ContractAlg {
 	private static final Random gerador = new Random();
 	private static final double sqrt2 = Math.sqrt(2d);
 	
+	private TimerAndReporter.ReportBean reportBean;
+	
 	public static long algoIteractionTime = 0;
+	
+	public ContractAlg(TimerAndReporter.ReportBean reportBean) {
+		this.reportBean = reportBean;
+	}
+	
+	public ContractAlg(){
+		this.reportBean = null;
+	}
 	
 	public int doContract(Network net) {
 		// Chama o contract para o novo grafo
 		int minCut = Integer.MAX_VALUE;
-		int maxTimes = net.getNodes().size() * net.getNodes().size() * (int) Math.log(net.getNodes().size());
 		
-		for (int i = 0; i < maxTimes / 100; i++) {
-			long timer = System.nanoTime();
-			long timer2 = System.currentTimeMillis();
-			long cloneTimer = Network.clonningTime;
-			
+		long executionStart = System.nanoTime();
+		
+		for (int i = 0; i < 200; i++) {
 			// Copia o grafo
-			Network newNet = net.clone();
+			long iteractionStart = System.nanoTime();
 			
+			Network newNet = new Network(net);
 			int cut = contract(newNet, 2);
-			
-			long itTime = (System.nanoTime() - timer);
-			long itClon = (Network.clonningTime - cloneTimer);
-			algoIteractionTime += itTime;
-			
-			System.out.println("Contract.cut="+cut+", tempo total: " + itTime+"ns - "+(System.currentTimeMillis()-timer2)+"ms" + "\t cloning: "+(((double) itClon / itTime) * 100d) + "%");
 			
 			if (cut < minCut) {
 				minCut = cut;
 			}
 			
-			if (minCut <= 1) {
-				// Corte mínimo <= 1 já indica mínimo global.
-				break;
+			if (reportBean!=null){
+				long now = System.nanoTime();
+				reportBean.iteraction = i;
+				reportBean.iteractionMinCut = cut;
+				reportBean.executionMinCut = minCut;
+				reportBean.executionTimeAcumulated = now - executionStart;
+				reportBean.iteractionTimeMillis = now - iteractionStart;
+				TimerAndReporter.writeReport(reportBean);
 			}
+			
+			// Removi esta otimização para forçar o número de iterações, pra estatística do relatório
+			//			if (minCut <= 1) {
+			//				// Corte mínimo <= 1 já indica mínimo global.
+			//				break;
+			//			}
 		}
 		
 		return minCut;
@@ -47,39 +60,42 @@ public class ContractAlg {
 	public int doFastCut(Network net) {
 		// Chama o contract para o novo grafo
 		int minCut = Integer.MAX_VALUE;
-		int maxTimes = net.getNodes().size() * net.getNodes().size();
 		
-		for (int i = 0; i < maxTimes / 100; i++) {
-			// Copia o grafo
-			Network newNet = net.clone();
-			long timer = System.nanoTime();
-			long timer2 = System.currentTimeMillis();
-			long cloneTimer = Network.clonningTime;
-			int cut = fastCut(newNet);
-			long itTime = (System.nanoTime() - timer);
-			long itClon = (Network.clonningTime - cloneTimer);
-			algoIteractionTime += itTime;
-			// System.out.println("Corte mínimo: " + minCut + " - Corte: " + cut);
+		long executionStart = System.nanoTime();
+		
+		for (int i = 0; i < 35; i++) {
 			
-			System.out.println("FastCut.cut="+cut+", tempo total: " + itTime+"ns - "+(System.currentTimeMillis()-timer2)+"ms" + "\t cloning: "+(((double) itClon / itTime) * 100d) + "%");
+			long iteractionStart = System.nanoTime();
+			
+			// Copia o grafo
+			Network newNet = new Network(net);
+			int cut = fastCut(newNet);
 			
 			if (cut < minCut) {
 				minCut = cut;
 			}
 			
-			if (minCut <= 1) {
-				// Corte mínimo <= 1 já indica mínimo global.
-				break;
+			if (reportBean!=null){
+				long now = System.nanoTime();
+				reportBean.iteraction = i;
+				reportBean.iteractionMinCut = cut;
+				reportBean.executionMinCut = minCut;
+				reportBean.executionTimeAcumulated = now - executionStart;
+				reportBean.iteractionTimeMillis = now - iteractionStart;
+				TimerAndReporter.writeReport(reportBean);
 			}
+			
+			// Removi esta otimização para forçar o número de iterações, pra estatística do relatório
+			//			if (minCut <= 1) {
+			//				// Corte mínimo <= 1 já indica mínimo global.
+			//				break;
+			//			}
 		}
 		
 		return minCut;
 	}
 	
 	private int fastCut(Network net) {
-		
-		// System.out.println("FastCut com qtdNodes=" + net.qtdNodes +
-		// "\t e qtdArcs=" + net.qtdArcs);
 		
 		// Caso base
 		if (net.qtdNodes <= 6) {
@@ -104,13 +120,8 @@ public class ContractAlg {
 				for (int n = 0; n < remainingNodes.size(); n += 1) {
 					if ((i >> n & 1) == 0) {
 						setA.add(remainingNodes.get(n));
-						// System.out.print(n + "/");
 					}
 				}
-				// System.out.println();
-				// if (setA.isEmpty()) {
-				// System.out.println("PERIGO!");
-				// }
 				
 				int thisCut = 0;
 				for (Node n : setA) {
@@ -126,27 +137,6 @@ public class ContractAlg {
 						}
 					}
 				}
-				
-				// if (thisCut == 1) {
-				// System.out.println("PERIGO2!");
-				// int tc2 = 0;
-				// setCut.clear();
-				// for (Node n : setA) {
-				// for (Map.Entry<Integer, Arc> e : n.getHashArcs().entrySet()) {
-				// if (e.getValue().getHead().hasDeleted())
-				// continue;
-				//
-				// if (!setA.contains(e.getValue())) {
-				// if (!setCut.contains(e.getKey())) {
-				// setCut.add(e.getKey());
-				// tc2 += (Integer) e.getValue().getProps().get("qtd");
-				// }
-				// }
-				// }
-				// }
-				// System.out.println("tc2=" + tc2);
-				//
-				// }
 				
 				minCut = Math.min(minCut, thisCut);
 			}
@@ -197,9 +187,6 @@ public class ContractAlg {
 				}
 			}
 			
-			//			if(node == null)
-			//				System.out.println("Ola");
-			
 			// Encontra o arco dentro do nó
 			Arc arc = null;
 			for (Map.Entry<Integer,Arc> n : node.getHashArcs().entrySet()) {
@@ -209,12 +196,6 @@ public class ContractAlg {
 					break;
 				}
 			}
-			
-			// if(arc == null)
-			// System.out.println("Peguei");
-			
-			// if(cont == 10)
-			// System.out.println("Hi!");
 			
 			// Contrai o arco
 			net.contractEdge(arc);

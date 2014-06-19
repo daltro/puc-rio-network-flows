@@ -1,36 +1,31 @@
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
 public class MainBatchTester {
 	
-	private enum TestType {
-		/**
-		 * Cycle Cancelling - Ford Fulkerson
-		 */
-		CC_F,
-		
-		/**
-		 * Cycle Cancelling - Edmonds Karp
-		 */
-		CC_E,
-		
-		/**
-		 * Sucessive Shortest Paths
-		 */
-		SSP,
-		
-		/**
-		 * Sucessive Shortest Paths, com Capacity Scalling
-		 */
-		SSP_CS
-	}
-	
 	public static void main(String[] args) throws IOException,
-	    InterruptedException {
+	InterruptedException {
 		
 		File netDirs = new File("netg");
 		
+		ArrayList<File> files = new ArrayList<File>();
+		for (File f : netDirs.listFiles()){
+			if (!f.getName().endsWith(".net"))
+				continue;
+			files.add(f);
+		}
+		Collections.sort(files, new Comparator<File>() {
+			@Override
+			public int compare(File o1, File o2) {
+				return Long.compare(o1.length(), o2.length());
+			}
+		});
+		
 		TimerAndReporter.enabled = true;
+		TimerAndReporter.start();
 		// TimerAndReporter.timeOut = 1000l * 3;
 		TimerAndReporter.initReport();
 		
@@ -39,92 +34,50 @@ public class MainBatchTester {
 		// (para tirar média depois)
 		final int numOfExecutions = 5;
 		
+		TimerAndReporter.ReportBean reportBean = new TimerAndReporter.ReportBean();
+		
 		for (int execution = 0; execution < numOfExecutions; execution += 1) {
-			for (File file : netDirs.listFiles()) {
-				if (!file.getName().endsWith(".net"))
-					continue;
+			for (int fIdx = 0; fIdx<files.size(); fIdx+=1) {
+				File file = files.get(fIdx);
+				String progress = " ("+(fIdx+1)+"/"+files.size()+", execução "+(execution+1)+")";
 				
-				runTestsWith(file, execution);
+				reportBean.instance = file.getName().substring(0,file.getName().length()-4);
+				reportBean.execution = execution;
+				
+				Network newNet = new Network();
+				System.out.print("Arquivo " + file.getName() + progress + " carregando... ");
+				newNet.loadFromFile(file);
+				System.out.println("ok.");
+				
+				reportBean.nodeCount = newNet.qtdNodes;
+				reportBean.arcCount = newNet.qtdArcs;
+				
+				ContractAlg contract = new ContractAlg(reportBean);
+				System.out.println("  * Corte mínimo(deterministic)...");
+				try{
+					TimerAndReporter.start();
+					reportBean.algorithm = "deterministic";
+					newNet.doDeterministicGlobalMinCut(reportBean);
+				}catch(Throwable e){}
+				
+				System.out.println("  * Corte mínimo(contract)...");
+				try{
+					TimerAndReporter.start();
+					reportBean.algorithm = "contract";
+					contract.doContract(newNet);
+				}catch(Throwable e){}
+				
+				System.out.println("  * Corte mínimo(fastCut)...");
+				try{
+					TimerAndReporter.start();
+					reportBean.algorithm = "fastCut";
+					contract.doFastCut(newNet);
+				}catch(Throwable e){}
+				
 				
 			}
 		}
 		
 	}
 	
-	private static void runTestsWith(File file, int execution)
-	    throws IOException, InterruptedException {
-		
-		for (TestType type : TestType.values()) {
-			runOneTest(file, type, execution);
-		}
-	}
-	
-	private static boolean runOneTest(File file, final TestType type,
-	    int executionIdx) throws IOException, InterruptedException {
-		
-		String instanceName = file.getName().substring(0,
-		    file.getName().length() - 4);
-		
-		TimerAndReporter.start();
-		
-		System.out.println("\n\n" + instanceName + " com " + type + " - teste #"
-		    + executionIdx);
-		System.out.println("-------------------------------------------------");
-		
-		// Carregar arquivo
-		final Network net = new Network();
-		System.out.print("* Carregando " + file.getAbsolutePath() + "...");
-		net.loadFromFile(file);
-		System.out.println("ok em " + TimerAndReporter.elapsed() + "ms.");
-		
-		Response result;
-		boolean methodResult;
-		
-		System.out.println("* Chamando algoritmo de " + type + "...");
-		try {
-			switch (type) {
-				case CC_F:
-					result = net.cycleCanceling(false);
-					break;
-				case CC_E:
-					result = net.cycleCanceling(true);
-					break;
-				case SSP:
-					result = net.sucessiveShortestPath();
-					break;
-				case SSP_CS:
-					result = net.capacityScaling();
-					break;
-				default:
-					throw new IllegalStateException();
-			}
-			methodResult = true;
-		} catch (Throwable e) {
-			result = new Response();
-			result.setFeasibleSolution(true);
-			methodResult = false;
-			System.out.println("* !! Thread interrompida por exceção: "
-			    + e.getClass().getName() + " - " + e.getMessage());
-		}
-		
-		if (!methodResult || result == null) {
-			result = new Response();
-			result.setFeasibleSolution(true);
-			methodResult = false;
-		}
-		
-		TimerAndReporter.writeReport(instanceName, type.toString(),
-		    Boolean.toString(result.isFeasibleSolution()), executionIdx,
-		    result.getLoops(), result.getCostFlow(), result.getTimePreparing(),
-		    result.getTimeRunning());
-		
-		System.out
-		    .print("* Rodando Garbage Collector para evitar interferências no tempo...");
-		Runtime.getRuntime().gc();
-		System.out.println("Ok!");
-		
-		// Retorna false se a execução extourou o tempo máximo.
-		return methodResult;
-		
-	}
 }

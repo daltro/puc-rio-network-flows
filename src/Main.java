@@ -26,6 +26,9 @@ public class Main {
 		newNet.makeDotFile(file);
 		ContractAlg contract = new ContractAlg();
 		System.out.println("Rodando algoritmos em " + file.getName() + "...");
+		timer = System.currentTimeMillis();
+		System.out.println("Corte mínimo(deterministic): " + newNet.doDeterministicGlobalMinCut(null) + " em " + (System.currentTimeMillis() - timer) + "ms");
+		timer = System.currentTimeMillis();
 		System.out.println("Corte mínimo(contract): " + contract.doContract(newNet) + " em " + (System.currentTimeMillis() - timer) + "ms");
 		timer = System.currentTimeMillis();
 		System.out.println("Corte mínimo(fastCut): " + contract.doFastCut(newNet) + " em " + (System.currentTimeMillis() - timer) + "ms");

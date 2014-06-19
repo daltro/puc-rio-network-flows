@@ -3,9 +3,9 @@ import java.util.ArrayList;
 public final class Path {
 	
 	private final ArrayList<Arc> path;
-
+	
 	public Path() {
-		 path = new ArrayList<Arc>();
+		path = new ArrayList<Arc>();
 	}
 	
 	public ArrayList<Arc> getPath(){
@@ -29,15 +29,20 @@ public final class Path {
 	}
 	
 	public int getBottleneck(){
-		int minArc = -1;
 		
-		if(path.size() != 0){	
-			minArc = (Integer)path.get(0).get("cap");
-			
-			for(int i = 1; i < path.size(); i++)
-				minArc = Math.min(minArc, (Integer)path.get(i).get("cap"));
-		}
-		return minArc;
+		// Na rede modelada para o trabalho 2,
+		// as capacidades são 1, então o bottleneck é 1 também.
+		return 1;
+		
+		//		int minArc = -1;
+		//
+		//		if(path.size() != 0){
+		//			minArc = (Integer)path.get(0).get("cap");
+		//
+		//			for(int i = 1; i < path.size(); i++)
+		//				minArc = Math.min(minArc, (Integer)path.get(i).get("cap"));
+		//		}
+		//		return minArc;
 	}
 	
 	public void invertPath(){
@@ -51,16 +56,16 @@ public final class Path {
 			path.set(pos, auxResArc);
 		}
 	}
-
+	
 	@Override
 	public String toString() {
 		String res = "";
 		for (int i = 0; i < path.size(); i++){
 			if(i > 0)
 				res += ", ";
-			res += "(" + path.get(i).getTail().getId() + "," + path.get(i).getHead().getId() + ")"; 
+			res += "(" + path.get(i).getTail().getId() + "," + path.get(i).getHead().getId() + ")";
 		}
 		return res;
 	}
-
+	
 }
